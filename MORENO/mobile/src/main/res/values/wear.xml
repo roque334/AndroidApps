@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="android_wear_capabilities">
+        <!-- declaring that handheld provides data_analysis capability -->
+        <item>data_analysis</item>
+    </string-array>
+</resources>
