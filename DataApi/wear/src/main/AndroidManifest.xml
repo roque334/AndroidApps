@@ -24,7 +24,7 @@
         </activity>
 
         <service
-            android:name=".NotificationUpdateService"
+            android:name=".WearableService"
             android:enabled="true"
             android:exported="true" >
             <intent-filter>

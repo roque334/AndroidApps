@@ -11,6 +11,8 @@ import android.widget.Button;
 import com.example.roquecontreras.common.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.CapabilityApi;
+import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -20,46 +22,70 @@ import java.util.Date;
 
 public class MainActivity extends Activity {
 
-    private static final String TAG = "PhoneActivity";
+    private static final String LOG_TAG = "PhoneActivity";
     private GoogleApiClient mGoogleApiClient;
+    private CapabilityApi.CapabilityListener mCapabilityListener = new CapabilityApi.CapabilityListener() {
+        @Override
+        public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
+            Log.d(LOG_TAG, "onCapabilityChanged: " + capabilityInfo.getName());
+        }
+    };
+    
+    private void initializeGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(Bundle connectionHint) {
+                        Log.d(LOG_TAG, "onConnected: " + connectionHint);
+                    }
+                    @Override
+                    public void onConnectionSuspended(int cause) {
+                        Log.d(LOG_TAG, "onConnectionSuspended: " + cause);
+                    }
+                })
+                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                    @Override
+                    public void onConnectionFailed(ConnectionResult result) {
+                        Log.d(LOG_TAG, "onConnectionFailed: " + result);
+                    }
+                })
+                .addApi(Wearable.API)
+                .build();
+        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, Constants.DATA_ANALYSIS_CAPABILITY);
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(Bundle connectionHint) {
-                        Log.d(TAG, "onConnected: " + connectionHint);
-                    }
-                    @Override
-                    public void onConnectionSuspended(int cause) {
-                        Log.d(TAG, "onConnectionSuspended: " + cause);
-                    }
-                })
-                .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(ConnectionResult result) {
-                        Log.d(TAG, "onConnectionFailed: " + result);
-                    }
-                })
-                .addApi(Wearable.API)
-                .build();
-
+        initializeGoogleApiClient();
         Button startButton = (Button) findViewById(R.id.start_accelerometer_service_button);
         Button stopButton = (Button) findViewById(R.id.stop_accelerometer_service_button);
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendNotificationToService(Constants.START_PATH);
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendNotificationToServiceUsingDataItem(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH);
+                    }
+                });
+                thread.start();
             }
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendNotificationToService(Constants.STOP_PATH);
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendNotificationToServiceUsingDataItem(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH);
+                    }
+                });
+                thread.start();
+
             }
         });
     }
@@ -76,27 +102,48 @@ public class MainActivity extends Activity {
         mGoogleApiClient.disconnect();
     }
 
-    private String now() {
-        DateFormat dateFormat = android.text.format.DateFormat.getTimeFormat(this);
-        return dateFormat.format(new Date());
-    }
-
-    private void sendNotificationToService(String command) {
+    private boolean sendNotificationToServiceUsingDataItem(String command) {
+        boolean result = false;
         if (mGoogleApiClient.isConnected()) {
             PutDataMapRequest dataMapRequest = PutDataMapRequest.create(command);
-            // Make sure the data item is unique. Usually, this will not be required, as the payload
-            // (in this case the title and the content of the notification) will be different for almost all
-            // situations. However, in this example, the text and the content are always the same, so we need
-            // to disambiguate the data item by adding a field that contains teh current time in milliseconds.
             dataMapRequest.getDataMap().putDouble(Constants.NOTIFICATION_TIMESTAMP, System.currentTimeMillis());
-            dataMapRequest.getDataMap().putString(Constants.NOTIFICATION_TITLE, "This is the title");
-            dataMapRequest.getDataMap().putString(Constants.NOTIFICATION_CONTENT, "This is a notification with some text.");
             PutDataRequest putDataRequest = dataMapRequest.asPutDataRequest();
-            Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest);
+            result = Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest).await().getStatus().isSuccess();
         }
         else {
-            Log.e(TAG, "No connection to wearable available!");
+            Log.e(LOG_TAG, "No connection to wearable available!");
         }
+        return result;
+    }
+
+    private String[] GetWearablesNodeIDs(){
+        String[] result = null;
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
+                    .getCapability(mGoogleApiClient, Constants.DATA_ANALYSIS_CAPABILITY
+                            , CapabilityApi.FILTER_REACHABLE).await();
+            if (capabilityResult.getCapability().getNodes().size() > 0) {
+                result = (String[]) capabilityResult.getCapability().getNodes().toArray();
+            }
+        }
+        return result;
+    }
+
+    private boolean sendNotificationToServiceUsingMessages(String command, String message) {
+        String[] WearableNodes;
+        boolean result = true;
+        if (mGoogleApiClient.isConnected()) {
+            WearableNodes = GetWearablesNodeIDs();
+            for(String nodeID : WearableNodes) {
+                result = result && Wearable.MessageApi.sendMessage(mGoogleApiClient, nodeID,
+                        command, message.getBytes()).await().getStatus().isSuccess();
+            }
+        }
+        else {
+            result = false;
+            Log.e(LOG_TAG, "No connection to wearable available!");
+        }
+        return result;
     }
 
     @Override

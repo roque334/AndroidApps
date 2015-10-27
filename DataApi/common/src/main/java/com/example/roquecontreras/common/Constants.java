@@ -5,11 +5,16 @@ package com.example.roquecontreras.common;
  */
 public class Constants {
 
-        public static final String START_PATH = "/start-accelerometer-service";
-        public static final String STOP_PATH = "/stop-accelerometer-service";
+        //PATHS
+        public static final String START_ACCLEROMETER_BY_DATAITEM_PATH = "/start-accelerometer-dataitem-service";
+        public static final String STOP_ACCLEROMETER_BY_DATAITEM_PATH = "/stop-accelerometer-dataitem-service";
+        public static final String SEND_BY_CHANNEL_PATH = "/send-by-channel";
+
+        //CAPABILITIES
+        public static final String DATA_ANALYSIS_CAPABILITY = "data_analysis";
+        public static final String TREMOR_QUANTIFICATION_CAPABILITY = "tremor_quantification";
+
         public static final String NOTIFICATION_TIMESTAMP = "timestamp";
-        public static final String NOTIFICATION_TITLE = "title";
-        public static final String NOTIFICATION_CONTENT = "content";
 
         public static final String ACTION_DISMISS = "com.example.roquecontreras.dataapi.DISMISS";
 }
