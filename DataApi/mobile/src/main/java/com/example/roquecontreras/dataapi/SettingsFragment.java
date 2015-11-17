@@ -28,7 +28,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         addPreferencesFromResource(R.xml.preferences);
 
@@ -36,6 +35,22 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         for (int i = 0; i < getPreferenceScreen().getPreferenceCount(); i++) {
             pickPreferenceObject(getPreferenceScreen().getPreference(i));
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getPreferenceScreen()
+                .getSharedPreferences()
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getPreferenceScreen()
+                .getSharedPreferences()
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
 
     private void pickPreferenceObject(Preference p) {
@@ -50,18 +65,19 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     }
 
     private void updateSummary(Preference p) {
-        String text, intervalValue;
+        String text;
+        int intervalValue;
         Resources res = getResources();
-        if (p instanceof EditTextPreference) {
-            EditTextPreference editTextPref = (EditTextPreference) p;
+        if (p instanceof NumberPickerPreference) {
+            NumberPickerPreference editTextPref = (NumberPickerPreference) p;
             if (editTextPref.getKey().equalsIgnoreCase(KEY_MEASUREMENTS_SAMPLE_INTERVAL)) {
-                intervalValue = sharedPref.getString(KEY_MEASUREMENTS_SAMPLE_INTERVAL,"");
+                intervalValue = sharedPref.getInt(KEY_MEASUREMENTS_SAMPLE_INTERVAL,res.getInteger(R.integer.measurement_sample_defaultValue));
                 text = String.format(res.getString(R.string.measurement_sample_summary), intervalValue);
             }else{
                 if(editTextPref.getKey().equalsIgnoreCase(KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
-                    intervalValue = sharedPref.getString(KEY_HANDHELD_WEAR_SYNC_INTERVAL,"");
+                    intervalValue = sharedPref.getInt(KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
                 }else{
-                    intervalValue = sharedPref.getString(KEY_HANDHELD_SERVER_SYNC_INTERVAL,"");
+                    intervalValue = sharedPref.getInt(KEY_HANDHELD_SERVER_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
                 }
                 text = String.format(res.getString(R.string.sync_interval_summary), intervalValue);
             }
@@ -72,25 +88,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Preference pref = findPreference(key);
-        if (validateChange()) {
-            updateSummary();
-        }
+        updateSummary(pref);
     }
 
-        String text, intervalValue;
-        Resources res = getResources();
-        Preference pref = findPreference(key);
-        if (key.equalsIgnoreCase(KEY_MEASUREMENTS_SAMPLE_INTERVAL)) {
-            intervalValue = sharedPref.getString(KEY_MEASUREMENTS_SAMPLE_INTERVAL,"");
-            text = String.format(res.getString(R.string.measurement_sample_summary), intervalValue);
-            pref.setSummary(sharedPreferences.getString(key, ""));
-        }else if (key.equalsIgnoreCase(KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
-            intervalValue = sharedPref.getString(KEY_HANDHELD_WEAR_SYNC_INTERVAL,"");
-            text = String.format(res.getString(R.string.sync_interval_summary), intervalValue);
-        }else if (key.equalsIgnoreCase(KEY_HANDHELD_SERVER_SYNC_INTERVAL)){
-            intervalValue = sharedPref.getString(KEY_HANDHELD_SERVER_SYNC_INTERVAL,"");
-            text = String.format(res.getString(R.string.sync_interval_summary), intervalValue);
-            pref.setSummary(sharedPreferences.getString(key, ""));
-        }
-    }
 }

@@ -11,12 +11,9 @@
 
     <string name="measurement_sample_title">Sample interval</string>
     <string name="measurement_sample_summary">Every %1$s milisecond(s)</string>
-    <string name="measurement_sample_defaultValue">250</string>
 
     <string name="sync_notification_title">Notifications</string>
     <string name="sync_wifi_title">Only while on Wi-Fi</string>
     <string name="sync_interval_title">Sync interval</string>
     <string name="sync_interval_summary">Every %1$s hour(s)</string>
-    <string name="sync_interval_defaultValue">1</string>
-
 </resources>
