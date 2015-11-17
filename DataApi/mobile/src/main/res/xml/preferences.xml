@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/measurements"
+        android:key="pref_key_measurements_settings">
+        <EditTextPreference
+            android:key="pref_key_measurements_sample_interval"
+            android:title="@string/measurement_sample_title"
+            android:summary="@string/measurement_sample_summary"
+            android:defaultValue="@string/measurement_sample_defaultValue"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/handhelp_wear_sync"
+        android:key="pref_key_handheld_wear_sync_settings">
+        <CheckBoxPreference
+            android:key="pref_key_handheld_wear_sync_notification"
+            android:title="@string/sync_notification_title"
+            android:defaultValue="true"/>
+        <CheckBoxPreference
+            android:key="pref_key_handheld_wear_sync_wifi"
+            android:title="@string/sync_wifi_title"
+            android:defaultValue="true"/>
+        <EditTextPreference
+            android:key="pref_key_handheld_wear_sync_interval"
+            android:title="@string/sync_interval_title"
+            android:summary="@string/sync_interval_summary"
+            android:defaultValue="@string/sync_interval_defaultValue"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/handhelp_server_sync"
+        android:key="pref_key_handhelp_server_sync_settings">
+        <CheckBoxPreference
+            android:key="pref_key_handhelp_server_sync_notification"
+            android:title="@string/sync_notification_title"
+            android:defaultValue="true"/>
+        <CheckBoxPreference
+            android:key="pref_key_handhelp_server_sync_wifi"
+            android:title="@string/sync_wifi_title"
+            android:defaultValue="true"/>
+        <EditTextPreference
+            android:key="pref_key_handheld_server_sync_interval"
+            android:title="@string/sync_interval_title"
+            android:summary="@string/sync_interval_summary"
+            android:defaultValue="@string/sync_interval_defaultValue"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
