@@ -54,7 +54,6 @@ public class MainActivity extends Activity {
                 .addApi(Wearable.API)
                 .build();
         Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, Constants.DATA_ANALYSIS_CAPABILITY);
-
     }
 
     @Override
@@ -65,15 +64,27 @@ public class MainActivity extends Activity {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         initializeGoogleApiClient();
+        Button arrangeButton = (Button) findViewById(R.id.arrange_wear_over_limbs_button);
         Button startButton = (Button) findViewById(R.id.start_accelerometer_service_button);
         Button stopButton = (Button) findViewById(R.id.stop_accelerometer_service_button);
+
+        arrangeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String[] wearableNodesIDs = getWearablesNodeIDs();
+                Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
+                intent.putExtra(Constants.WEARABLE_NODES_EXTRA,wearableNodesIDs);
+                startActivity(intent);
+            }
+        });
+
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        sendNotificationToServiceUsingDataItem(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH);
+                        sendNotificationUsingDataItem(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH);
                     }
                 });
                 thread.start();
@@ -85,7 +96,7 @@ public class MainActivity extends Activity {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        sendNotificationToServiceUsingDataItem(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH);
+                        sendNotificationUsingDataItem(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH);
                     }
                 });
                 thread.start();
@@ -106,7 +117,7 @@ public class MainActivity extends Activity {
         mGoogleApiClient.disconnect();
     }
 
-    private boolean sendNotificationToServiceUsingDataItem(String command) {
+    private boolean sendNotificationUsingDataItem(String command) {
         boolean result = false;
         if (mGoogleApiClient.isConnected()) {
             PutDataMapRequest dataMapRequest = PutDataMapRequest.create(command);
@@ -120,7 +131,7 @@ public class MainActivity extends Activity {
         return result;
     }
 
-    private String[] GetWearablesNodeIDs(){
+    private String[] getWearablesNodeIDs(){
         String[] result = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
@@ -133,11 +144,11 @@ public class MainActivity extends Activity {
         return result;
     }
 
-    private boolean sendNotificationToServiceUsingMessages(String command, String message) {
+    private boolean sendNotificationUsingMessages(String command, String message) {
         String[] WearableNodes;
         boolean result = true;
         if (mGoogleApiClient.isConnected()) {
-            WearableNodes = GetWearablesNodeIDs();
+            WearableNodes = getWearablesNodeIDs();
             for(String nodeID : WearableNodes) {
                 result = result && Wearable.MessageApi.sendMessage(mGoogleApiClient, nodeID,
                         command, message.getBytes()).await().getStatus().isSuccess();

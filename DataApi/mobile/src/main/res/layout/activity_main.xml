@@ -5,20 +5,25 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
 
-    <TextView android:id="@+id/hello_word_textview"
-        android:text="@string/hello_world" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/arrange_wear_over_limbs_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/arrange_sensor"
+        android:layout_alignParentTop="true"/>
+
     <Button
         android:id="@+id/start_accelerometer_service_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Accelerometer"
-        android:layout_below="@+id/hello_word_textview"/>
+        android:text="@string/start_measurement"
+        android:layout_below="@+id/arrange_wear_over_limbs_button"/>
     <Button
         android:id="@+id/stop_accelerometer_service_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Stop Accelerometer"
+        android:text="@string/stop_measurement"
         android:layout_below="@+id/start_accelerometer_service_button"/>
 
 </RelativeLayout>

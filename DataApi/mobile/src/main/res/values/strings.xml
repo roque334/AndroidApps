@@ -1,10 +1,23 @@
 <resources>
-    <string name="app_name">DataApi</string>
+    <string name="app_name">MORENO</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+
+    <!--Main options-->
+    <string name="arrange_sensor">Arrange sensors</string>
+    <string name="start_measurement">Start measurements</string>
+    <string name="stop_measurement">Stop measurements</string>
+
+    <!--Limbs options-->
+    <string name="available_sensors_label">Available sensors:</string>
+    <string name="left_arm">Left arm</string>
+    <string name="right_arm">Right arm</string>
+    <string name="left_leg">Left leg</string>
+    <string name="right_leg">Right leg</string>
+    <string name="ok">Ok</string>
     
-    Settings
+    <!--Settings-->
+    <string name="action_settings">Settings</string>
     <string name="measurements">Measurements</string>
     <string name="handhelp_wear_sync">Handheld &amp; Wear sync</string>
     <string name="handhelp_server_sync">Handheld &amp; Server sync</string>
@@ -16,4 +29,5 @@
     <string name="sync_wifi_title">Only while on Wi-Fi</string>
     <string name="sync_interval_title">Sync interval</string>
     <string name="sync_interval_summary">Every %1$s hour(s)</string>
+    <string name="title_activity_arrange_sensors">ArrangeSensorsActivity</string>
 </resources>

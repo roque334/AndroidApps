@@ -19,6 +19,7 @@ import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
@@ -41,14 +42,35 @@ public class WearableService extends WearableListenerService {
     public void onDataChanged(DataEventBuffer dataEvents) {
         for(DataEvent dataEvent: dataEvents) {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
-                if (Constants.START_ACCLEROMETER_BY_DATAITEM_PATH.equals(dataEvent.getDataItem().getUri().getPath())) {
-                    Log.d(LOG_TAG, "StartService");
-                    startService(new Intent(this, AccelerometerService.class));
-                } else if (Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH.equals(dataEvent.getDataItem().getUri().getPath())) {
-                    Log.d(LOG_TAG, "StopService");
-                    stopService(new Intent(this, AccelerometerService.class));
+                switch (dataEvent.getDataItem().getUri().getPath()) {
+                    case Constants.START_ACCLEROMETER_BY_DATAITEM_PATH:
+                        Log.d(LOG_TAG, "StartService");
+                        startService(new Intent(this, AccelerometerService.class));
+                        break;
+                    case Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH:
+                        Log.d(LOG_TAG, "StopService");
+                        stopService(new Intent(this, AccelerometerService.class));
+                    default:
+                        break;
                 }
             }
+        }
+    }
+
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        super.onMessageReceived(messageEvent);
+        switch (messageEvent.getPath()) {
+            case Constants.ARRANGE_SENSORS_BY_DATAITEM_PATH:
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.common_ic_googleplayservices)
+                        .setContentTitle("Wear disposition")
+                        .setContentText("Wear on the " + messageEvent.getPath());
+
+                Notification notification = builder.build();
+
+                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat.notify(1, notification);
         }
     }
 }
