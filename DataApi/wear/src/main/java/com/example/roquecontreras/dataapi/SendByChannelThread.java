@@ -68,6 +68,9 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         }
     }
 
+    /**
+     * Builds the GoogleApiClient with the Wearable API and a capabilityListener.
+     */
     private void InitializeGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(mContext)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -92,12 +95,19 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         mGoogleApiClient.connect();
     }
 
+    /**
+     * Waits until the GoogleApiClient gets connected.
+     */
     private void WaitGoogleApiClientConnection() {
         while (mGoogleApiClient.isConnecting()) {
 
         }
     }
 
+    /**
+     * Returns the id of handheld node.
+     * @return the id of the handheld node.
+     */
     private String GetHandheldNodeID(){
         String result = "";
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
@@ -113,6 +123,10 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         return result;
     }
 
+    /**
+     * Sends the measurement file to the handheld node.
+     * @return True if the file was send correctly; otherwise False.
+     */
     private boolean SendFile(){
         boolean result = false;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {

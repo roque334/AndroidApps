@@ -2,6 +2,8 @@ package com.example.roquecontreras.dataapi;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -32,7 +34,10 @@ public class MainActivity extends Activity {
             Log.d(LOG_TAG, "onCapabilityChanged: " + capabilityInfo.getName());
         }
     };
-    
+
+    /**
+     * Builds the GoogleApiClient with the Wearable API and a capabilityListener.
+     */
     private void initializeGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -117,11 +122,22 @@ public class MainActivity extends Activity {
         mGoogleApiClient.disconnect();
     }
 
+    /**
+     * Sends a dataitem to the cloud node to stats/stops the accelerometer services of the sensors.
+     * @param command the dataitem path.
+     * @return True if the dataitem was send correctly to the cloud node; otherwise false.
+     */
     private boolean sendNotificationUsingDataItem(String command) {
+        Resources res;
         boolean result = false;
+        res = getResources();
         if (mGoogleApiClient.isConnected()) {
             PutDataMapRequest dataMapRequest = PutDataMapRequest.create(command);
             dataMapRequest.getDataMap().putDouble(Constants.NOTIFICATION_TIMESTAMP, System.currentTimeMillis());
+            dataMapRequest.getDataMap().putLong(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL
+                    , new Long(getSharedPreferences().getInt(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, res.getInteger(R.integer.measurement_sample_defaultValue))));
+            dataMapRequest.getDataMap().putLong(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL
+                    , new Long(getSharedPreferences().getInt(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue))));
             PutDataRequest putDataRequest = dataMapRequest.asPutDataRequest();
             result = Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest).await().getStatus().isSuccess();
         }
@@ -131,6 +147,14 @@ public class MainActivity extends Activity {
         return result;
     }
 
+    private SharedPreferences getSharedPreferences(){
+        return PreferenceManager.getDefaultSharedPreferences(this);
+    }
+
+    /**
+     * Returns the sensors id currently connected to the Wireless Body Area Network (WBAN).
+     * @return the list of sensors id currently connected to the WBAN
+     */
     private String[] getWearablesNodeIDs(){
         String[] result = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
@@ -144,6 +168,13 @@ public class MainActivity extends Activity {
         return result;
     }
 
+    /**
+     * Sends a message to every sensor node connected to the WBAN to stats/stops their
+     * accelerometer services.
+     * @param command the message path.
+     * @param message the message to be sent to stats/stops the accelerometer services.
+     * @return True if the message went out of the sender device.
+     */
     private boolean sendNotificationUsingMessages(String command, String message) {
         String[] WearableNodes;
         boolean result = true;
