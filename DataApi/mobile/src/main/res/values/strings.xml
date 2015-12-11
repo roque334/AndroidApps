@@ -1,7 +1,12 @@
 <resources>
     <string name="app_name">MORENO</string>
 
-    <string name="hello_world">Hello world!</string>
+
+    <string name="title_activity_sign_in">Sign In</string>
+
+    <string name="welcome_label">Welcome</string>
+    <string name="sign_in_label">Please sign in with:</string>
+
 
     <!--Main options-->
     <string name="arrange_sensor">Arrange sensors</string>
@@ -9,13 +14,14 @@
     <string name="stop_measurement">Stop measurements</string>
 
     <!--Limbs options-->
+    <string name="title_activity_arrange_sensors">Arrange Sensors</string>
     <string name="available_sensors_label">Available sensors:</string>
     <string name="left_arm">Left arm</string>
     <string name="right_arm">Right arm</string>
     <string name="left_leg">Left leg</string>
     <string name="right_leg">Right leg</string>
     <string name="ok">Ok</string>
-    
+
     <!--Settings-->
     <string name="action_settings">Settings</string>
     <string name="measurements">Measurements</string>
@@ -29,5 +35,10 @@
     <string name="sync_wifi_title">Only while on Wi-Fi</string>
     <string name="sync_interval_title">Sync interval</string>
     <string name="sync_interval_summary">Every %1$s hour(s)</string>
-    <string name="title_activity_arrange_sensors">ArrangeSensorsActivity</string>
+
+    <!--Others-->
+    <string name="arrangement_status">Arrangement</string>
+    <string name="sensing_status">Sensing</string>
+    <string name="on_label">ON</string>
+    <string name="off_label">OFF</string>
 </resources>

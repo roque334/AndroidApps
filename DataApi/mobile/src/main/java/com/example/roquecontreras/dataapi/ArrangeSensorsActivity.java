@@ -1,5 +1,6 @@
 package com.example.roquecontreras.dataapi;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
@@ -16,6 +17,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Wearable;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,6 +69,8 @@ public class ArrangeSensorsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arrange_sensors);
 
+        Log.d(LOG_TAG, "onCreate");
+
         initializeGoogleApiClient();
         loadExtras(getIntent());
 
@@ -80,9 +86,30 @@ public class ArrangeSensorsActivity extends Activity {
         arrangeSensorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                arrangeSensorsUsingMessages(Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
+                Map arrange = new HashMap<>();
+                if (arrangeSensorsUsingMessages(Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH, arrange)) {
+                    savesSensorArrangement(arrange);
+                    finish();
+                }
             }
         });
+    }
+
+    private void savesSensorArrangement(Map arrange) {
+        String line;
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput(Constants.ARRANGEMENT_FILENAME, Context.MODE_PRIVATE);
+            for (int i = 0; i < mWearableNodesIDs.length; i++) {
+                line = mWearableNodesIDs[i] + ";" + arrange.get(mWearableNodesIDs[i] + "\n");
+                fos.write(line.getBytes());
+            }
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -235,13 +262,12 @@ public class ArrangeSensorsActivity extends Activity {
      * @param command the path that identifies the message.
      * @return true if the sensors were arranged; otherwise false.
      */
-    private boolean arrangeSensorsUsingMessages(String command) {
+    private boolean arrangeSensorsUsingMessages(String command, Map arrange) {
         String[] WearableNodes;
         String message;
         boolean result;
         ArrayList<CheckBox> checkBoxesWithTrueStatus =  getCheckBoxesByStatus(true);
         result = true;
-        Map arrange = new HashMap<>();
         if (mGoogleApiClient.isConnected()) {
             for(int i = 0; i < mNumberWearablesAvailables; i++) {
                 message = getBodyPart(checkBoxesWithTrueStatus.get(i));

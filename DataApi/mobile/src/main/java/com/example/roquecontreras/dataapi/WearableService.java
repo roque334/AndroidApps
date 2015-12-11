@@ -23,10 +23,15 @@ import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.android.gms.wearable.PutDataRequest.WEAR_URI_SCHEME;
@@ -67,11 +72,46 @@ public class WearableService extends WearableListenerService {
         }
     }
 
+    /**
+     * Returns the arrangement of the sensors over the patient body.
+     * @return the Map with the arrangement key/values.
+     */
+    private Map readArrangementFile() {
+        InputStreamReader inputStreamReader;
+        BufferedReader bufferedReader;
+        String[] keyValue;
+        String receiveString;
+        Map result = new HashMap();
+        try {
+            InputStream inputStream = openFileInput(Constants.ARRANGEMENT_FILENAME);
+            if ( inputStream != null ) {
+                inputStreamReader = new InputStreamReader(inputStream);
+                bufferedReader = new BufferedReader(inputStreamReader);
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    keyValue = receiveString.split(";");
+                    result.put(keyValue[0], keyValue[1]);
+                }
+                inputStream.close();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e(LOG_TAG, "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Can not read file: " + e.toString());
+        }
+        return result;
+    }
+
+
     @Override
     public void onInputClosed(Channel channel, int i, int i1) {
         Log.d(LOG_TAG, "onInputClosed: " + channel.getNodeId());
     }
 
+    /**
+     * Builds and connects the GoogleApiClient with the Wearable API and a capabilityListener.
+     * @return the GoogleApiClient connected.
+     */
     private GoogleApiClient InitializeGoogleApiClient() {
         GoogleApiClient googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
@@ -97,6 +137,12 @@ public class WearableService extends WearableListenerService {
         return googleApiClient;
     }
 
+    /**
+     *
+     * @param channel
+     * @param googleApiClient
+     * @return
+     */
     private boolean ReceiveFile(Channel channel, GoogleApiClient googleApiClient) {
         fileTimeStamp = System.currentTimeMillis();
         String filename = "measurements_" + channel.getNodeId() + "_" + fileTimeStamp;
@@ -104,12 +150,20 @@ public class WearableService extends WearableListenerService {
         return channel.receiveFile(googleApiClient, Uri.fromFile(this.getFileStreamPath(filename)), false).await().isSuccess();
     }
 
+    /**
+     *  Waits until the GoogleApiClient gets connected.
+     * @param googleApiClient the GoogleApiClient requesting the connection.
+     */
     private void WaitGoogleApiClientConnection(GoogleApiClient googleApiClient) {
         while (googleApiClient.isConnecting()) {
 
         }
     }
 
+    /**
+     * Creates a file to registry the data received.
+     * @param filename the name of the file to create.
+     */
     private void CreateMeasurementFile(String filename) {
         try {
             measurementsFile = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -118,6 +172,9 @@ public class WearableService extends WearableListenerService {
         }
     }
 
+    /**
+     * Closes the current measurement file.
+     */
     private void CloseMeasurementFile() {
         try {
             measurementsFile.close();

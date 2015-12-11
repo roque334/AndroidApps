@@ -12,12 +12,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:text="@string/available_sensors_label"/>
+        android:text="@string/available_sensors_label"
+        android:textStyle="bold"
+        android:textColor="#000000"/>
 
     <TextView
         android:id="@+id/available_sensors_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:textColor="#000000"
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/available_sensors_label"/>
 
@@ -26,6 +30,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/left_arm"
+        android:textStyle="bold"
+        android:textColor="#000000"
         android:onClick="onCheckboxClicked"
         android:button="@null"
         android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
@@ -35,6 +41,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/right_arm"
+        android:textStyle="bold"
+        android:textColor="#000000"
         android:onClick="onCheckboxClicked"
         android:button="@null"
         android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
@@ -44,6 +52,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/left_leg"
+        android:textStyle="bold"
+        android:textColor="#000000"
         android:onClick="onCheckboxClicked"
         android:button="@null"
         android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
@@ -53,6 +63,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/right_leg"
+        android:textStyle="bold"
+        android:textColor="#000000"
         android:onClick="onCheckboxClicked"
         android:button="@null"
         android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
@@ -101,6 +113,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/arrange_sensor"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
         android:layout_below="@+id/lower_body"/>
 
 </RelativeLayout>

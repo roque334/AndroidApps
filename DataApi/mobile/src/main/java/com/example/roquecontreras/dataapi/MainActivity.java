@@ -11,10 +11,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.Switch;
 
 import com.example.roquecontreras.common.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.PutDataMapRequest;
@@ -23,11 +26,20 @@ import com.google.android.gms.wearable.Wearable;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "PhoneActivity";
+    Switch mArrangeSwitch, mSesingSwitch;
+    String[] mDevicesID;
+
     private GoogleApiClient mGoogleApiClient;
+
     private CapabilityApi.CapabilityListener mCapabilityListener = new CapabilityApi.CapabilityListener() {
         @Override
         public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
@@ -69,16 +81,20 @@ public class MainActivity extends Activity {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         initializeGoogleApiClient();
-        Button arrangeButton = (Button) findViewById(R.id.arrange_wear_over_limbs_button);
-        Button startButton = (Button) findViewById(R.id.start_accelerometer_service_button);
-        Button stopButton = (Button) findViewById(R.id.stop_accelerometer_service_button);
+        ImageButton arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
+        mArrangeSwitch = (Switch) findViewById(R.id.arrangement_status);
+        ImageButton startButton = (ImageButton) findViewById(R.id.sesing_imageview);
+        mSesingSwitch = (Switch) findViewById(R.id.sensing_status);
+        ImageButton preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
 
         arrangeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String[] wearableNodesIDs = getWearablesNodeIDs();
+                Log.d(LOG_TAG, "ArrangeButton_onClick");
+                getWearablesNodeIDs();
+                Log.d(LOG_TAG, "ArrangeButton_onClick_Intent");
                 Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
-                intent.putExtra(Constants.WEARABLE_NODES_EXTRA,wearableNodesIDs);
+                intent.putExtra(Constants.WEARABLE_NODES_EXTRA,mDevicesID);
                 startActivity(intent);
             }
         });
@@ -86,28 +102,46 @@ public class MainActivity extends Activity {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendNotificationUsingDataItem(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH);
-                    }
-                });
-                thread.start();
-            }
-        });
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendNotificationUsingDataItem(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH);
-                    }
-                });
-                thread.start();
+                if (!mSesingSwitch.isChecked()) {
+                    mSesingSwitch.setChecked(startSendNotificationUsingDataItemThread(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH));
+                } else {
+                    mSesingSwitch.setChecked(!startSendNotificationUsingDataItemThread(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
+                }
 
             }
         });
+
+        preferencesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(intent);
+
+            }
+        });
+    }
+
+    private boolean startSendNotificationUsingDataItemThread(final String command) {
+        boolean result = false;
+        Future<Boolean> threadResult;
+        Callable<Boolean> callable;
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        callable = new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
+                return sendNotificationUsingDataItem(command);
+            }
+        };
+        threadResult = es.submit(callable);
+        es.shutdown();
+        try {
+            result = threadResult.get().booleanValue();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @Override
@@ -155,17 +189,29 @@ public class MainActivity extends Activity {
      * Returns the sensors id currently connected to the Wireless Body Area Network (WBAN).
      * @return the list of sensors id currently connected to the WBAN
      */
-    private String[] getWearablesNodeIDs(){
-        String[] result = null;
+    private void getWearablesNodeIDs(){
+        Log.d(LOG_TAG, "getWearablesNodeIDs");
+        mDevicesID = null;
+
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
+            Log.d(LOG_TAG, "getWearablesNodeIDs_mGoogleApiClientConnected");
+            Wearable.CapabilityApi
                     .getCapability(mGoogleApiClient, Constants.DATA_ANALYSIS_CAPABILITY
-                            , CapabilityApi.FILTER_REACHABLE).await();
-            if (capabilityResult.getCapability().getNodes().size() > 0) {
-                result = (String[]) capabilityResult.getCapability().getNodes().toArray();
-            }
+                            , CapabilityApi.FILTER_REACHABLE).setResultCallback(new ResultCallback<CapabilityApi.GetCapabilityResult>() {
+                @Override
+                public void onResult(CapabilityApi.GetCapabilityResult capabilityResult) {
+                    if (capabilityResult.getStatus().isSuccess()) {
+                        if (capabilityResult.getCapability().getNodes().size() > 0) {
+                            mDevicesID = (String[]) capabilityResult.getCapability().getNodes().toArray();
+                        }
+                    } else {
+                        Log.d(LOG_TAG, "getWearablesNodeIDs_capabilityResult: " + capabilityResult.getStatus().getStatusMessage());
+                    }
+                }
+            });
+
+
         }
-        return result;
     }
 
     /**
@@ -179,8 +225,8 @@ public class MainActivity extends Activity {
         String[] WearableNodes;
         boolean result = true;
         if (mGoogleApiClient.isConnected()) {
-            WearableNodes = getWearablesNodeIDs();
-            for(String nodeID : WearableNodes) {
+            getWearablesNodeIDs();
+            for(String nodeID : mDevicesID) {
                 result = result && Wearable.MessageApi.sendMessage(mGoogleApiClient, nodeID,
                         command, message.getBytes()).await().getStatus().isSuccess();
             }

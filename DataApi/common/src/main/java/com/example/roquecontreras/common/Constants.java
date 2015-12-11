@@ -27,7 +27,7 @@ public class Constants {
         public static final String LLEG_MESSAGE = "left leg";
         public static final String RLEG_MESSAGE = "right leg";
 
-        //PREFERENCES
+        //PREFERENCES KEYS
         public static final String KEY_MEASUREMENTS_SAMPLE_INTERVAL = "pref_key_measurements_sample_interval";
         public static final String KEY_HANDHELD_WEAR_SYNC_NOTIFICATION = "pref_key_handheld_wear_sync_notification";
         public static final String KEY_HANDHELD_WEAR_SYNC_WIFI = "pref_key_handheld_wear_sync_wifi";
@@ -35,4 +35,7 @@ public class Constants {
         public static final String KEY_HANDHELP_SERVER_SYNC_NOTIFICATION = "pref_key_handhelp_server_sync_notification";
         public static final String KEY_HANDHELP_SERVER_SYNC_WIFI = "pref_key_handhelp_server_sync_wifi";
         public static final String KEY_HANDHELD_SERVER_SYNC_INTERVAL = "pref_key_handheld_server_sync_interval";
+
+        //ARRANGEMENT FILE
+        public static final String ARRANGEMENT_FILENAME = "arrangement_file";
 }

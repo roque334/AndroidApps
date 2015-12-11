@@ -92,11 +92,11 @@ public class WearableService extends WearableListenerService {
         switch (message) {
             case Constants.LARM_MESSAGE:
                 builder.setLargeIcon(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.larm_notif_background));
+                        getResources(), R.drawable.lhand_notif_background));
                 break;
             case Constants.RARM_MESSAGE:
                 builder.setLargeIcon(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.rarm_notif_background));
+                        getResources(), R.drawable.rhand_notif_background));
                 break;
             case Constants.LLEG_MESSAGE:
                 builder.setLargeIcon(BitmapFactory.decodeResource(
