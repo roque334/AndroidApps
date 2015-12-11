@@ -121,6 +121,12 @@ public class MainActivity extends Activity {
         });
     }
 
+    /**
+     * Starts the thread that sends the notification to the cloud node to start/stop
+     * the accelerometer service.
+     * @param command the dataitem path.
+     * @return True if the dataitem was send correctly to the cloud node; otherwise false.
+     */
     private boolean startSendNotificationUsingDataItemThread(final String command) {
         boolean result = false;
         Future<Boolean> threadResult;
