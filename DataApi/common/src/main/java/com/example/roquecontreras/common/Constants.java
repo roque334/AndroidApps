@@ -38,4 +38,9 @@ public class Constants {
 
         //ARRANGEMENT FILE
         public static final String ARRANGEMENT_FILENAME = "arrangement_file";
+
+        //RESULT CODES
+        public static final int RESULT_CODE_ARRANGEMENT = 0;
+        public static final int RESULT_OK = 1;
+        public static final int RESULT_ERROR = 0;
 }

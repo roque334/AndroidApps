@@ -23,6 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ArrangeSensorsActivity extends Activity {
 
@@ -86,9 +91,14 @@ public class ArrangeSensorsActivity extends Activity {
         arrangeSensorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Map arrange = new HashMap<>();
-                if (arrangeSensorsUsingMessages(Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH, arrange)) {
+                Map arrange = startArrangeSensorsUsingMessagesThread(Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
+                if (arrange != null) {
                     savesSensorArrangement(arrange);
+                    setResult(RESULT_OK);
+                    finish();
+                } else {
+                    Log.d(LOG_TAG, "arrangeSensorsButton.OnClick: arrange == null");
+                    setResult(RESULT_CANCELED);
                     finish();
                 }
             }
@@ -256,28 +266,57 @@ public class ArrangeSensorsActivity extends Activity {
         }
     }
 
+    /**
+     * Starts the thread that returns the map with every sensorID and its body part.
+     * @param command the path that identifies the message.
+     * @return the map with every sensorID and its body part; otherwise null.
+     */
+    private Map startArrangeSensorsUsingMessagesThread(final String command) {
+        Map result = new HashMap<>();;
+        Future<Map> threadResult;
+        Callable<Map> callable;
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        callable = new Callable<Map>() {
+            @Override
+            public Map call() {
+                return arrangeSensorsUsingMessages(command);
+            }
+        };
+        threadResult = es.submit(callable);
+        es.shutdown();
+        try {
+            result = threadResult.get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 
     /**
-     * Arranges the available sensors over the patiens body.
+     * Returns the map with every sensorID and its body part.
      * @param command the path that identifies the message.
-     * @return true if the sensors were arranged; otherwise false.
+     * @return the map with every sensorID and its body part; otherwise null.
      */
-    private boolean arrangeSensorsUsingMessages(String command, Map arrange) {
-        String[] WearableNodes;
+    private Map arrangeSensorsUsingMessages(String command) {
         String message;
-        boolean result;
+        Map result;
         ArrayList<CheckBox> checkBoxesWithTrueStatus =  getCheckBoxesByStatus(true);
-        result = true;
+        result = new HashMap<>();
         if (mGoogleApiClient.isConnected()) {
-            for(int i = 0; i < mNumberWearablesAvailables; i++) {
+            for(int i = 0; i < checkBoxesWithTrueStatus.size(); i++) {
                 message = getBodyPart(checkBoxesWithTrueStatus.get(i));
-                result = result && Wearable.MessageApi.sendMessage(mGoogleApiClient, mWearableNodesIDs[i],
-                        command, message.getBytes()).await().getStatus().isSuccess();
-                arrange.put(mWearableNodesIDs[i], message);
+                if (Wearable.MessageApi.sendMessage(mGoogleApiClient, mWearableNodesIDs[i],
+                        command, message.getBytes()).await().getStatus().isSuccess()) {
+                    result.put(mWearableNodesIDs[i], message);
+                } else {
+                    result = null;
+                    break;
+                }
             }
-        }
-        else {
-            result = false;
+        } else {
+            result = null;
             Log.e(LOG_TAG, "No connection to wearable available!");
         }
         return result;

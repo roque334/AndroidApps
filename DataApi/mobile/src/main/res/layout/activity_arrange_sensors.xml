@@ -22,8 +22,7 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textColor="#000000"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/available_sensors_label"/>
+        android:layout_toRightOf="@+id/available_sensors_label"/>
 
     <CheckBox
         android:id="@+id/left_arm_checkbox"
@@ -114,7 +113,7 @@
         android:layout_height="wrap_content"
         android:text="@string/arrange_sensor"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         android:layout_below="@+id/lower_body"/>
 
 </RelativeLayout>

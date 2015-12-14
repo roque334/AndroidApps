@@ -5,7 +5,7 @@
     <string name="title_activity_sign_in">Sign In</string>
 
     <string name="welcome_label">Welcome</string>
-    <string name="sign_in_label">Please sign in with:</string>
+    <string name="sign_in_label">Please sign in with: </string>
 
 
     <!--Main options-->
@@ -15,7 +15,7 @@
 
     <!--Limbs options-->
     <string name="title_activity_arrange_sensors">Arrange Sensors</string>
-    <string name="available_sensors_label">Available sensors:</string>
+    <string name="available_sensors_label">Available sensors: </string>
     <string name="left_arm">Left arm</string>
     <string name="right_arm">Right arm</string>
     <string name="left_leg">Left leg</string>
