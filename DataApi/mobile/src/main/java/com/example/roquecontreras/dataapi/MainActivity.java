@@ -2,6 +2,7 @@ package com.example.roquecontreras.dataapi;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -39,6 +40,8 @@ public class MainActivity extends Activity {
     private static final String LOG_TAG = "PhoneActivity";
     Switch mArrangeSwitch, mSesingSwitch;
     String[] mDevicesID;
+
+    NetworkChangeReceiver mNetworkChangeReceiver;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -160,6 +163,20 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+        mNetworkChangeReceiver = new NetworkChangeReceiver();
+        registerReceiver(mNetworkChangeReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mNetworkChangeReceiver);
     }
 
     @Override

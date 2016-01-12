@@ -2,6 +2,7 @@ package com.example.roquecontreras.dataapi;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Activity;
 import android.support.annotation.NonNull;
@@ -41,6 +42,8 @@ public class ArrangeSensorsActivity extends Activity {
     private ImageView mBodyLeftLeg;
     private ImageView mBodyRightLeg;
     private TextView mAvailableSensors;
+
+    NetworkChangeReceiver mNetworkChangeReceiver;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -126,6 +129,20 @@ public class ArrangeSensorsActivity extends Activity {
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+        mNetworkChangeReceiver = new NetworkChangeReceiver();
+        registerReceiver(mNetworkChangeReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mNetworkChangeReceiver);
     }
 
     @Override
