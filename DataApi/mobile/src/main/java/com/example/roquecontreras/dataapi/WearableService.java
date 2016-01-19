@@ -1,30 +1,21 @@
 package com.example.roquecontreras.dataapi;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
-import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,9 +23,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static com.google.android.gms.wearable.PutDataRequest.WEAR_URI_SCHEME;
 
 /**
  * Created by Roque Contreras on 27/10/2015.
@@ -62,7 +50,7 @@ public class WearableService extends WearableListenerService {
     @Override
     public void onChannelOpened(final Channel channel) {
         Log.d(LOG_TAG, "onChannelOpened: " + channel.getNodeId());
-        if (Constants.SEND_BY_CHANNEL_PATH.equals(channel.getPath())) {
+        if (MobileWearConstants.SEND_BY_CHANNEL_PATH.equals(channel.getPath())) {
             GoogleApiClient googleApiClient = InitializeGoogleApiClient();
             WaitGoogleApiClientConnection(googleApiClient);
             if (ReceiveFile(channel, googleApiClient)) {
@@ -83,7 +71,7 @@ public class WearableService extends WearableListenerService {
         String receiveString;
         Map result = new HashMap();
         try {
-            InputStream inputStream = openFileInput(Constants.ARRANGEMENT_FILENAME);
+            InputStream inputStream = openFileInput(MobileWearConstants.ARRANGEMENT_FILENAME);
             if ( inputStream != null ) {
                 inputStreamReader = new InputStreamReader(inputStream);
                 bufferedReader = new BufferedReader(inputStreamReader);
@@ -132,7 +120,7 @@ public class WearableService extends WearableListenerService {
                 })
                 .addApi(Wearable.API)
                 .build();
-        Wearable.CapabilityApi.addCapabilityListener(googleApiClient, mCapabilityListener, Constants.DATA_ANALYSIS_CAPABILITY);
+        Wearable.CapabilityApi.addCapabilityListener(googleApiClient, mCapabilityListener, MobileWearConstants.DATA_ANALYSIS_CAPABILITY);
         googleApiClient.connect();
         return googleApiClient;
     }

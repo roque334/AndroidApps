@@ -2,14 +2,12 @@ package com.example.roquecontreras.dataapi;
 
 import android.app.Notification;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataMap;
@@ -44,7 +42,7 @@ public class WearableService extends WearableListenerService {
         for(DataEvent dataEvent: dataEvents) {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                 switch (dataEvent.getDataItem().getUri().getPath()) {
-                    case Constants.START_ACCLEROMETER_BY_DATAITEM_PATH:
+                    case MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH:
                         Log.d(LOG_TAG, "StartService");
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
@@ -57,11 +55,11 @@ public class WearableService extends WearableListenerService {
 
                         intent = new Intent(this, AccelerometerService.class);
                         DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
-                        intent.putExtra(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, dataMap.getLong(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
-                        intent.putExtra(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, dataMap.getLong(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
+                        intent.putExtra(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, dataMap.getLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
+                        intent.putExtra(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, dataMap.getLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
                         startService(intent);
                         break;
-                    case Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH:
+                    case MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH:
                         Log.d(LOG_TAG, "StopService");
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
@@ -90,7 +88,7 @@ public class WearableService extends WearableListenerService {
         super.onMessageReceived(messageEvent);
         String message;
         switch (messageEvent.getPath()) {
-            case Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH:
+            case MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH:
                 message = new String(messageEvent.getData());
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -112,19 +110,19 @@ public class WearableService extends WearableListenerService {
      */
     private void setNotificationBackgroundImage(NotificationCompat.Builder builder, String message) {
         switch (message) {
-            case Constants.LARM_MESSAGE:
+            case MobileWearConstants.LARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
                         getResources(), R.drawable.lhand_notif_background)));
                 break;
-            case Constants.RARM_MESSAGE:
+            case MobileWearConstants.RARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
                         getResources(), R.drawable.rhand_notif_background)));
                 break;
-            case Constants.LLEG_MESSAGE:
+            case MobileWearConstants.LLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
                         getResources(), R.drawable.lleg_notif_background)));
                 break;
-            case Constants.RLEG_MESSAGE:
+            case MobileWearConstants.RLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
                         getResources(), R.drawable.rleg_notif_background)));
             default:

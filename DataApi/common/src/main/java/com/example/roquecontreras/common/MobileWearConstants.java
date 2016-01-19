@@ -3,7 +3,7 @@ package com.example.roquecontreras.common;
 /**
  * Created by Roque Contreras on 16/10/2015.
  */
-public class Constants {
+public class MobileWearConstants {
 
         //PATHS
         public static final String ARRANGE_SENSORS_BY_MESSAGE_PATH = "/arrange-sensors-message";

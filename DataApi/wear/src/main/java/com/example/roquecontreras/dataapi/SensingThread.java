@@ -5,21 +5,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
-import android.os.Bundle;
 import android.util.Log;
 
-import com.example.roquecontreras.common.Constants;
 import com.example.roquecontreras.common.Measurement;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Channel;
-import com.google.android.gms.wearable.Wearable;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Created by roquecontreras on 26/10/15.

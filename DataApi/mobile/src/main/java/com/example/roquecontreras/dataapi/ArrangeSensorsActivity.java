@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Activity;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +12,7 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.Wearable;
@@ -94,7 +93,7 @@ public class ArrangeSensorsActivity extends Activity {
         arrangeSensorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Map arrange = startArrangeSensorsUsingMessagesThread(Constants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
+                Map arrange = startArrangeSensorsUsingMessagesThread(MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
                 if (arrange != null) {
                     savesSensorArrangement(arrange);
                     setResult(RESULT_OK);
@@ -112,7 +111,7 @@ public class ArrangeSensorsActivity extends Activity {
         String line;
         FileOutputStream fos = null;
         try {
-            fos = openFileOutput(Constants.ARRANGEMENT_FILENAME, Context.MODE_PRIVATE);
+            fos = openFileOutput(MobileWearConstants.ARRANGEMENT_FILENAME, Context.MODE_PRIVATE);
             for (int i = 0; i < mWearableNodesIDs.length; i++) {
                 line = mWearableNodesIDs[i] + ";" + arrange.get(mWearableNodesIDs[i] + "\n");
                 fos.write(line.getBytes());
@@ -237,7 +236,7 @@ public class ArrangeSensorsActivity extends Activity {
      */
     private void loadExtras(Intent currentIntent) {
         Bundle extras = currentIntent.getExtras();
-        mWearableNodesIDs = extras.getStringArray(Constants.WEARABLE_NODES_EXTRA);
+        mWearableNodesIDs = extras.getStringArray(MobileWearConstants.WEARABLE_NODES_EXTRA);
         mNumberWearablesAvailables = mWearableNodesIDs.length;
     }
 
@@ -348,16 +347,16 @@ public class ArrangeSensorsActivity extends Activity {
         String result = "";
         switch (checkBox.getId()) {
             case R.id.left_arm_checkbox:
-                result = Constants.LARM_MESSAGE;
+                result = MobileWearConstants.LARM_MESSAGE;
                 break;
             case R.id.right_arm_checkbox:
-                result = Constants.RARM_MESSAGE;
+                result = MobileWearConstants.RARM_MESSAGE;
                 break;
             case R.id.left_leg_checkbox:
-                result = Constants.LLEG_MESSAGE;
+                result = MobileWearConstants.LLEG_MESSAGE;
                 break;
             case R.id.right_leg_checkbox:
-                result = Constants.RLEG_MESSAGE;
+                result = MobileWearConstants.RLEG_MESSAGE;
             default:
                 break;
         }

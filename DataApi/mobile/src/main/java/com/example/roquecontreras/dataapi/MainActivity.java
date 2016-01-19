@@ -11,14 +11,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Switch;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Node;
@@ -26,8 +24,6 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -76,7 +72,7 @@ public class MainActivity extends Activity {
                 })
                 .addApi(Wearable.API)
                 .build();
-        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, Constants.DATA_ANALYSIS_CAPABILITY);
+        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, MobileWearConstants.DATA_ANALYSIS_CAPABILITY);
     }
 
     @Override
@@ -100,8 +96,8 @@ public class MainActivity extends Activity {
                 mDevicesID = getWearablesNodeIDsThread();
                 if (mDevicesID != null) {
                     Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
-                    intent.putExtra(Constants.WEARABLE_NODES_EXTRA, mDevicesID);
-                    startActivityForResult(intent, Constants.RESULT_CODE_ARRANGEMENT);
+                    intent.putExtra(MobileWearConstants.WEARABLE_NODES_EXTRA, mDevicesID);
+                    startActivityForResult(intent, MobileWearConstants.RESULT_CODE_ARRANGEMENT);
                 } else {
                     Log.d(LOG_TAG, "ArrangeButton_onClick: mDevicesID == null");
                 }
@@ -112,9 +108,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 if (!mSesingSwitch.isChecked()) {
-                    mSesingSwitch.setChecked(startSendNotificationUsingDataItemThread(Constants.START_ACCLEROMETER_BY_DATAITEM_PATH));
+                    mSesingSwitch.setChecked(startSendNotificationUsingDataItemThread(MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH));
                 } else {
-                    mSesingSwitch.setChecked(!startSendNotificationUsingDataItemThread(Constants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
+                    mSesingSwitch.setChecked(!startSendNotificationUsingDataItemThread(MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
                 }
             }
         });
@@ -197,11 +193,11 @@ public class MainActivity extends Activity {
         res = getResources();
         if (mGoogleApiClient.isConnected()) {
             PutDataMapRequest dataMapRequest = PutDataMapRequest.create(command);
-            dataMapRequest.getDataMap().putDouble(Constants.NOTIFICATION_TIMESTAMP, System.currentTimeMillis());
-            dataMapRequest.getDataMap().putLong(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL
-                    , new Long(getSharedPreferences().getInt(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, res.getInteger(R.integer.measurement_sample_defaultValue))));
-            dataMapRequest.getDataMap().putLong(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL
-                    , new Long(getSharedPreferences().getInt(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue))));
+            dataMapRequest.getDataMap().putDouble(MobileWearConstants.NOTIFICATION_TIMESTAMP, System.currentTimeMillis());
+            dataMapRequest.getDataMap().putLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL
+                    , new Long(getSharedPreferences().getInt(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, res.getInteger(R.integer.measurement_sample_defaultValue))));
+            dataMapRequest.getDataMap().putLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL
+                    , new Long(getSharedPreferences().getInt(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue))));
             PutDataRequest putDataRequest = dataMapRequest.asPutDataRequest();
             result = Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest).await().getStatus().isSuccess();
         } else {
@@ -256,7 +252,7 @@ public class MainActivity extends Activity {
 
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                 CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
-                        .getCapability(mGoogleApiClient, Constants.TREMOR_QUANTIFICATION_CAPABILITY
+                        .getCapability(mGoogleApiClient, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY
                                 , CapabilityApi.FILTER_REACHABLE).await();
                 if (capabilityResult.getStatus().isSuccess()) {
                     if (capabilityResult.getCapability().getNodes().size() > 0) {
@@ -368,7 +364,7 @@ public class MainActivity extends Activity {
 
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
-        if (requestCode == Constants.RESULT_CODE_ARRANGEMENT) {
+        if (requestCode == MobileWearConstants.RESULT_CODE_ARRANGEMENT) {
             if (resultCode == RESULT_OK) {
                 mArrangeSwitch.setChecked(true);
             } else {

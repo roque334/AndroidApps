@@ -5,20 +5,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.ChannelApi;
-import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
-
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
 
 /**
  * Created by roquecontreras on 26/10/15.
@@ -61,7 +55,7 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         }
 
         if (isSuccess) {
-            Wearable.CapabilityApi.removeCapabilityListener(mGoogleApiClient, mCapabilityListener, Constants.TREMOR_QUANTIFICATION_CAPABILITY);
+            Wearable.CapabilityApi.removeCapabilityListener(mGoogleApiClient, mCapabilityListener, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY);
             mGoogleApiClient.disconnect();
             Thread.currentThread().interrupt();
             return;
@@ -91,7 +85,7 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
                 })
                 .addApi(Wearable.API)
                 .build();
-        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, Constants.TREMOR_QUANTIFICATION_CAPABILITY);
+        Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY);
         mGoogleApiClient.connect();
     }
 
@@ -113,7 +107,7 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.d(LOG_TAG, "GetHandheldNodeID: isConnected");
             CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
-                    .getCapability(mGoogleApiClient, Constants.DATA_ANALYSIS_CAPABILITY
+                    .getCapability(mGoogleApiClient, MobileWearConstants.DATA_ANALYSIS_CAPABILITY
                             , CapabilityApi.FILTER_REACHABLE).await();
             Log.d(LOG_TAG, "GetHandheldNodeID: " + capabilityResult.getStatus().isSuccess());
             if (capabilityResult.getCapability().getNodes().size() > 0) {
@@ -131,7 +125,7 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         boolean result = false;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.d(LOG_TAG, "SendFile: isConnected" );
-            ChannelApi.OpenChannelResult channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, Constants.SEND_BY_CHANNEL_PATH).await();
+            ChannelApi.OpenChannelResult channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
             Log.d(LOG_TAG, "SendFile_OpenChannelResult: " +channelResult.getStatus().isSuccess());
             mChannel = channelResult.getChannel();
             Log.d(LOG_TAG, "channel: " + mChannel.getNodeId());

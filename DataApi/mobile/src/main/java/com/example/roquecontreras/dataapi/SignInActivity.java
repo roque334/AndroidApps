@@ -6,9 +6,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.roquecontreras.common.WebServerConstants;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -16,6 +23,22 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SignInActivity extends FragmentActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -33,6 +56,7 @@ public class SignInActivity extends FragmentActivity implements
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestIdToken(WebServerConstants.WEB_SERVER_CLIENT_ID)
                 .build();
 
         // Build a GoogleApiClient with access to the Google Sign-In API and the
@@ -78,10 +102,12 @@ public class SignInActivity extends FragmentActivity implements
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
-            String personName = acct.getDisplayName();
-            String personEmail = acct.getEmail();
-            String personId = acct.getId();
-            Uri personPhoto = acct.getPhotoUrl();
+            //String personName = acct.getDisplayName();
+            //String personEmail = acct.getEmail();
+            //String personId = acct.getId();
+            //Uri personPhoto = acct.getPhotoUrl();
+            String idToken = acct.getIdToken();
+            sendTokenToServerToValidate(idToken);
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
@@ -89,6 +115,31 @@ public class SignInActivity extends FragmentActivity implements
         } else {
             // Signed out, show unauthenticated UI.
         }
+    }
+
+    private void sendTokenToServerToValidate(String idToken) {
+        RequestQueue queue = SingletonRequestQueue.getInstance(this.getApplicationContext()).
+                getRequestQueue();
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("id_token", idToken);
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+                , new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d("Request", "Response: " + response.toString());
+                    }
+                }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        //This code is executed if there is an error.
+                        Log.d("Request", "Error: " + error.toString());
+                    }
+        });
+
+        SingletonRequestQueue.getInstance(this).addToRequestQueue(jsonObjectRequest);
+
     }
 
     @Override

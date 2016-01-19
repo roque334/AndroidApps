@@ -3,13 +3,12 @@ package com.example.roquecontreras.dataapi;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
-import com.example.roquecontreras.common.Constants;
+import com.example.roquecontreras.common.MobileWearConstants;
 
 /**
  * Created by roquecontreras on 17/11/15.
@@ -72,14 +71,14 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         Resources res = getResources();
         if (p instanceof NumberPickerPreference) {
             NumberPickerPreference editTextPref = (NumberPickerPreference) p;
-            if (editTextPref.getKey().equalsIgnoreCase(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL)) {
-                intervalValue = sharedPref.getInt(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL,res.getInteger(R.integer.measurement_sample_defaultValue));
+            if (editTextPref.getKey().equalsIgnoreCase(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL)) {
+                intervalValue = sharedPref.getInt(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL,res.getInteger(R.integer.measurement_sample_defaultValue));
                 text = String.format(res.getString(R.string.measurement_sample_summary), intervalValue);
             }else{
-                if(editTextPref.getKey().equalsIgnoreCase(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
-                    intervalValue = sharedPref.getInt(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
+                if(editTextPref.getKey().equalsIgnoreCase(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
+                    intervalValue = sharedPref.getInt(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
                 }else{
-                    intervalValue = sharedPref.getInt(Constants.KEY_HANDHELD_SERVER_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
+                    intervalValue = sharedPref.getInt(MobileWearConstants.KEY_HANDHELD_SERVER_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
                 }
                 text = String.format(res.getString(R.string.sync_interval_summary), intervalValue);
             }

@@ -1,18 +1,11 @@
 package com.example.roquecontreras.dataapi;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.example.roquecontreras.common.Constants;
-import com.google.android.gms.wearable.Wearable;
-
-import java.util.WeakHashMap;
+import com.example.roquecontreras.common.MobileWearConstants;
 
 public class AccelerometerService extends Service {
 
@@ -31,8 +24,8 @@ public class AccelerometerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
         if (!mSensingThread.isRunning()) {
-            mSensingThread.setMeasuringTime(intent.getExtras().getLong(Constants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
-            mSensingThread.setFileSendingTime(intent.getExtras().getLong(Constants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
+            mSensingThread.setMeasuringTime(intent.getExtras().getLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
+            mSensingThread.setFileSendingTime(intent.getExtras().getLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
             mSensingThread.start();
         }
         return START_REDELIVER_INTENT;
