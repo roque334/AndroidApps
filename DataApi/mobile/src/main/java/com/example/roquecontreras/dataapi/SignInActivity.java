@@ -2,16 +2,14 @@ package com.example.roquecontreras.dataapi;
 
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.app.Activity;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -24,20 +22,17 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SignInActivity extends FragmentActivity implements
@@ -46,6 +41,15 @@ public class SignInActivity extends FragmentActivity implements
 
     private GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 0;
+
+    private final String twoHyphens = "--";
+    private final String lineEnd = "\r\n";
+    private final String boundary = "apiclient-" + System.currentTimeMillis();
+    //private final String mimeType = "multipart/form-data;boundary=" + boundary;
+
+    private byte[] multipartBody;
+
+    private final String FILENAME = "prueba";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +103,7 @@ public class SignInActivity extends FragmentActivity implements
     }
 
     private void handleSignInResult(GoogleSignInResult result) {
+        FileOutputStream fos = null;
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
@@ -107,39 +112,126 @@ public class SignInActivity extends FragmentActivity implements
             //String personId = acct.getId();
             //Uri personPhoto = acct.getPhotoUrl();
             String idToken = acct.getIdToken();
+            /*try {
+                fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                for (int i=0; i< 1000000; i++) {
+                    fos.write(acct.getEmail().getBytes());
+                }
+                fos.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            File file = new File(this.getApplicationContext().getFilesDir(), FILENAME);
+            sendTextFileToServer(file, idToken);*/
             sendTokenToServerToValidate(idToken);
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-
         } else {
             // Signed out, show unauthenticated UI.
         }
     }
 
-    private void sendTokenToServerToValidate(String idToken) {
-        RequestQueue queue = SingletonRequestQueue.getInstance(this.getApplicationContext()).
-                getRequestQueue();
+    private void sendTokenToServerToValidate(final String idToken) {
+        /*RequestQueue queue = SingletonRequestQueue.getInstance(this.getApplicationContext()).
+                getRequestQueue();*/
 
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("id_token", idToken);
+        params.put("id-token", idToken);
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
                 , new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.d("Request", "Response: " + response.toString());
-                    }
-                }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        //This code is executed if there is an error.
-                        Log.d("Request", "Error: " + error.toString());
-                    }
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d("Request", "Response: " + response.toString());
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                //This code is executed if there is an error.
+                Log.d("Request", "Error: " + error.toString());
+            }
+        }) {
+
+            @Override
+            public Map<String, String> getHeaders() {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("id-token", idToken);
+                return headers;
+            }
+        };
+        SingletonRequestQueue.getInstance(this).addToRequestQueue(jsonObjectRequest);
+    }
+
+    private void sendTextFileToServer(File file, String idToken) {
+        ByteArrayOutputStream bos;
+        DataOutputStream dos;
+        String mimeType;
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "text/plain");
+        headers.put("Content-Disposition", "attachment;filename=" + file.getName());
+        headers.put("id-token", idToken);
+        headers.put("Accept", "application/json");
+        mimeType = "attachment;filename=" + file.getName();
+        bos = new ByteArrayOutputStream();
+        dos = new DataOutputStream(bos);
+
+        Log.d("Request", "FileSize = " + file.length());
+        buildTextPart(dos, readFromFile(file));
+        multipartBody = bos.toByteArray();
+
+        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.LOCAL_WEB_SERVER_UPLOAD_MEASURE_FILE_URL, headers, mimeType, multipartBody, new Response.Listener<NetworkResponse>() {
+            @Override
+            public void onResponse(NetworkResponse response) {
+                try {
+                    JSONObject jsonObject = new JSONObject(new String(response.data));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.d("Request", "Response: " + new String(response.data));
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("Request", "Error: " + error.toString());
+            }
         });
 
-        SingletonRequestQueue.getInstance(this).addToRequestQueue(jsonObjectRequest);
+        SingletonRequestQueue.getInstance(this).addToRequestQueue(multipartFileRequest);
+    }
 
+    private void buildTextPart(DataOutputStream dataOutputStream, String parameterValue) {
+        try {
+            dataOutputStream.writeBytes(parameterValue);
+        } catch (IOException e) {
+            Log.d("Request", "buildTextPart: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private String readFromFile(File file) {
+        String contents;
+        FileInputStream fis;
+        byte[] bytes;
+        int length;
+
+        fis = null;
+        length = (int) file.length();
+        bytes = new byte[length];
+
+        try {
+            fis = new FileInputStream(file);
+            fis.read(bytes);
+            fis.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        contents = new String(bytes);
+        return contents;
     }
 
     @Override
