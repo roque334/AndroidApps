@@ -132,10 +132,15 @@ public class WearableService extends WearableListenerService {
      * @return
      */
     private boolean ReceiveFile(Channel channel, GoogleApiClient googleApiClient) {
+        boolean result = false;
         fileTimeStamp = System.currentTimeMillis();
         String filename = "measurements_" + channel.getNodeId() + "_" + fileTimeStamp;
         CreateMeasurementFile(filename);
-        return channel.receiveFile(googleApiClient, Uri.fromFile(this.getFileStreamPath(filename)), false).await().isSuccess();
+        if (channel.receiveFile(googleApiClient, Uri.fromFile(this.getFileStreamPath(filename)), false).await().isSuccess()) {
+            CloseMeasurementFile();
+            result = true;
+        }
+        return result;
     }
 
     /**
