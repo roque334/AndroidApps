@@ -14,7 +14,11 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Switch;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.example.roquecontreras.common.MobileWearConstants;
+import com.example.roquecontreras.common.WebServerConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.CapabilityApi;
@@ -24,22 +28,30 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "PhoneActivity";
-    Switch mArrangeSwitch, mSesingSwitch;
+    Switch mArrangeSwitch, mSensingSwitch;
     String[] mDevicesID;
 
     NetworkChangeReceiver mNetworkChangeReceiver;
 
     private GoogleApiClient mGoogleApiClient;
+    private String mIdToken;
 
     private CapabilityApi.CapabilityListener mCapabilityListener = new CapabilityApi.CapabilityListener() {
         @Override
@@ -82,11 +94,14 @@ public class MainActivity extends Activity {
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+        this.mIdToken = savedInstanceState.getString(WebServerConstants.ID_TOKEN_LABEL);
+
         initializeGoogleApiClient();
         ImageButton arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
         mArrangeSwitch = (Switch) findViewById(R.id.arrangement_status);
         ImageButton startButton = (ImageButton) findViewById(R.id.sesing_imageview);
-        mSesingSwitch = (Switch) findViewById(R.id.sensing_status);
+        mSensingSwitch = (Switch) findViewById(R.id.sensing_status);
+        ImageButton uploadDataButton = (ImageButton) findViewById(R.id.upload_data_imageview);
         ImageButton preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
 
         arrangeButton.setOnClickListener(new View.OnClickListener() {
@@ -107,10 +122,28 @@ public class MainActivity extends Activity {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mSesingSwitch.isChecked()) {
-                    mSesingSwitch.setChecked(startSendNotificationUsingDataItemThread(MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH));
+                if (!mSensingSwitch.isChecked()) {
+                    mSensingSwitch.setChecked(startSendNotificationUsingDataItemThread(MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH));
                 } else {
-                    mSesingSwitch.setChecked(!startSendNotificationUsingDataItemThread(MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
+                    mSensingSwitch.setChecked(!startSendNotificationUsingDataItemThread(MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
+                }
+            }
+        });
+
+        uploadDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String stringPattern= "^measurements(.*)";
+                Pattern pattern = Pattern.compile(stringPattern);
+                File filesDir = getApplicationContext().getFilesDir();
+                File[] directoryListing = filesDir.listFiles();
+                for (File child : directoryListing) {
+                    if (!child.isDirectory()) {
+                        Matcher matcher =  pattern.matcher(child.getName());
+                        if (matcher.matches()){
+                            sendTextFileToServer(child);
+                        }
+                    }
                 }
             }
         });
@@ -372,5 +405,37 @@ public class MainActivity extends Activity {
             }
         }
     }
+
+    private void sendTextFileToServer(File file) {
+        final String idToken = this.mIdToken;
+        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.LOCAL_WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
+                , new Response.Listener<NetworkResponse>() {
+            @Override
+            public void onResponse(NetworkResponse response) {
+                try {
+                    JSONObject jsonObject = new JSONObject(new String(response.data));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.d("Request", "Response: " + new String(response.data));
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("Request", "Error: " + error.toString());
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = super.getHeaders();
+                headers.put(WebServerConstants.ID_TOKEN_LABEL, idToken);
+                return headers;
+            }
+        };
+
+        SingletonRequestQueue.getInstance(this).addToRequestQueue(multipartFileRequest);
+    }
+
+
 
 }
