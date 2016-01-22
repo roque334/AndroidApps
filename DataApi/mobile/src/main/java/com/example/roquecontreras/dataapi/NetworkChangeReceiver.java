@@ -1,16 +1,11 @@
 package com.example.roquecontreras.dataapi;
 
-import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
-import android.view.View;
-
-import java.util.List;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
 
