@@ -107,6 +107,10 @@ public class ArrangeSensorsActivity extends Activity {
         });
     }
 
+    /**
+     * Saves the sensor arrangement to long persistent file
+     * @param arrange the sensor arrangement
+     */
     private void savesSensorArrangement(Map arrange) {
         String line;
         FileOutputStream fos = null;
