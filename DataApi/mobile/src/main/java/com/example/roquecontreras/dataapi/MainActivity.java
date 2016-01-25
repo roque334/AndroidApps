@@ -90,6 +90,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ImageButton arrangeButton, startButton, uploadDataButton, preferencesButton;
         setContentView(R.layout.activity_main);
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -97,12 +98,12 @@ public class MainActivity extends Activity {
         this.mIdToken = savedInstanceState.getString(WebServerConstants.ID_TOKEN_LABEL);
 
         initializeGoogleApiClient();
-        ImageButton arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
+        arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
         mArrangeSwitch = (Switch) findViewById(R.id.arrangement_status);
-        ImageButton startButton = (ImageButton) findViewById(R.id.sesing_imageview);
+        startButton = (ImageButton) findViewById(R.id.sesing_imageview);
         mSensingSwitch = (Switch) findViewById(R.id.sensing_status);
-        ImageButton uploadDataButton = (ImageButton) findViewById(R.id.upload_data_imageview);
-        ImageButton preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
+        uploadDataButton = (ImageButton) findViewById(R.id.upload_data_imageview);
+        preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
 
         arrangeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,13 +134,18 @@ public class MainActivity extends Activity {
         uploadDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String stringPattern= "^measurements(.*)";
-                Pattern pattern = Pattern.compile(stringPattern);
-                File filesDir = getApplicationContext().getFilesDir();
-                File[] directoryListing = filesDir.listFiles();
+                String stringPattern;
+                Pattern pattern;
+                Matcher matcher;
+                File filesDir;
+                File[] directoryListing;
+                stringPattern = "^" + MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH + "(.*)";
+                pattern = Pattern.compile(stringPattern);
+                filesDir = getApplicationContext().getFilesDir();
+                directoryListing = filesDir.listFiles();
                 for (File child : directoryListing) {
                     if (!child.isDirectory()) {
-                        Matcher matcher =  pattern.matcher(child.getName());
+                        matcher =  pattern.matcher(child.getName());
                         if (matcher.matches()){
                             sendTextFileToServer(child);
                         }
@@ -197,8 +203,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+        IntentFilter filter;
         mNetworkChangeReceiver = new NetworkChangeReceiver();
+        filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
         registerReceiver(mNetworkChangeReceiver, filter);
     }
 
@@ -221,17 +228,19 @@ public class MainActivity extends Activity {
      * @return True if the dataitem was send correctly to the cloud node; otherwise false.
      */
     private boolean sendNotificationUsingDataItem(String command) {
+        PutDataMapRequest dataMapRequest;
+        PutDataRequest putDataRequest;
         Resources res;
         boolean result = false;
         res = getResources();
         if (mGoogleApiClient.isConnected()) {
-            PutDataMapRequest dataMapRequest = PutDataMapRequest.create(command);
+            dataMapRequest = PutDataMapRequest.create(command);
             dataMapRequest.getDataMap().putDouble(MobileWearConstants.NOTIFICATION_TIMESTAMP, System.currentTimeMillis());
             dataMapRequest.getDataMap().putLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL
                     , new Long(getSharedPreferences().getInt(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, res.getInteger(R.integer.measurement_sample_defaultValue))));
             dataMapRequest.getDataMap().putLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL
                     , new Long(getSharedPreferences().getInt(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue))));
-            PutDataRequest putDataRequest = dataMapRequest.asPutDataRequest();
+            putDataRequest = dataMapRequest.asPutDataRequest();
             result = Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest).await().getStatus().isSuccess();
         } else {
             Log.e(LOG_TAG, "No connection to wearable available!");
@@ -279,12 +288,13 @@ public class MainActivity extends Activity {
      */
     private String[] getWearablesNodeIDs() {
         Log.d(LOG_TAG, "getWearablesNodeIDs");
+        CapabilityApi.GetCapabilityResult capabilityResult;
         String[] result = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.d(LOG_TAG, "getWearablesNodeIDs_mGoogleApiClientConnected");
 
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
+                capabilityResult = Wearable.CapabilityApi
                         .getCapability(mGoogleApiClient, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY
                                 , CapabilityApi.FILTER_REACHABLE).await();
                 if (capabilityResult.getStatus().isSuccess()) {
@@ -384,6 +394,11 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Parses a set of currently connected nodes into a string array of node's id.
+     * @param wearableNodes the set of currrently connected nodes.
+     * @return the array of sensors id currently connected to the WBAN
+     */
     private String[] setNodeToArrayString(Set<Node> wearableNodes) {
         int i;
         String[] result = new String[wearableNodes.size()];
@@ -395,6 +410,12 @@ public class MainActivity extends Activity {
         return result;
     }
 
+    /**
+     * Deals with the result of an activity started for result.
+     * @param requestCode the code for a particular request
+     * @param resultCode the result code of the particular request
+     * @param data the data returned from the activity started for result
+     */
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
         if (requestCode == MobileWearConstants.RESULT_CODE_ARRANGEMENT) {
@@ -406,6 +427,10 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * Sends a file to the app server with a multipart request.
+     * @param file the file to send
+     */
     private void sendTextFileToServer(File file) {
         final String idToken = this.mIdToken;
         MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.LOCAL_WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
@@ -435,7 +460,5 @@ public class MainActivity extends Activity {
 
         SingletonRequestQueue.getInstance(this).addToRequestQueue(multipartFileRequest);
     }
-
-
 
 }
