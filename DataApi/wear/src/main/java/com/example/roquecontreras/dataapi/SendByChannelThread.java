@@ -103,10 +103,11 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
      * @return the id of the handheld node.
      */
     private String GetHandheldNodeID(){
+        CapabilityApi.GetCapabilityResult capabilityResult;
         String result = "";
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             Log.d(LOG_TAG, "GetHandheldNodeID: isConnected");
-            CapabilityApi.GetCapabilityResult capabilityResult = Wearable.CapabilityApi
+            capabilityResult = Wearable.CapabilityApi
                     .getCapability(mGoogleApiClient, MobileWearConstants.DATA_ANALYSIS_CAPABILITY
                             , CapabilityApi.FILTER_REACHABLE).await();
             Log.d(LOG_TAG, "GetHandheldNodeID: " + capabilityResult.getStatus().isSuccess());
@@ -122,10 +123,11 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
      * @return True if the file was send correctly; otherwise False.
      */
     private boolean SendFile(){
+        ChannelApi.OpenChannelResult channelResult;
         boolean result = false;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            Log.d(LOG_TAG, "SendFile: isConnected" );
-            ChannelApi.OpenChannelResult channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
+            Log.d(LOG_TAG, "SendFile: isConnected");
+            channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
             Log.d(LOG_TAG, "SendFile_OpenChannelResult: " +channelResult.getStatus().isSuccess());
             mChannel = channelResult.getChannel();
             Log.d(LOG_TAG, "channel: " + mChannel.getNodeId());
