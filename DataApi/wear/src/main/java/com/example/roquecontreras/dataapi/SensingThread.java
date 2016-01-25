@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.example.roquecontreras.common.Measurement;
+import com.example.roquecontreras.common.MobileWearConstants;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -21,22 +22,22 @@ public class SensingThread extends Thread implements SensorEventListener {
     private static final String LOG_TAG = "SensingThread";
 
     //Thread variables
-    private volatile boolean running = false;
+    private volatile boolean mRunning = false;
     private Context mContext;
 
     //AccelerometerSensor variables
     private SensorManager mSensorManager;
     private Sensor mSensor;
-    private final float alpha = 0.8f;
-    private float[] gravity = new float[3];
-    private Long lastSensorUpdate;
+    private final float mAlpha = 0.8f;
+    private float[] mGravity = new float[3];
+    private Long mLastSensorUpdate;
 
     public Long mMeasuringTime;
 
     //File variables
-    private FileOutputStream measurementsFile;
-    private final String FILENAME = "measurements_";
-    private Long fileTimeStamp;
+    private FileOutputStream mMeasurementsFile;
+    private String mFilename;
+    private Long mFileTimeStamp;
 
     private Long mFileSendingTime;
 
@@ -58,7 +59,7 @@ public class SensingThread extends Thread implements SensorEventListener {
      * @return True if the thread is currently running; otherwise False.
      */
     public boolean isRunning() {
-        return running;
+        return mRunning;
     }
 
     /**
@@ -69,14 +70,14 @@ public class SensingThread extends Thread implements SensorEventListener {
     public void Terminate() {
         mSensorManager.unregisterListener(this);
         CloseMeasurementFile();
-        mSendByChannelThread = new SendByChannelThread(mContext, FILENAME + fileTimeStamp);
+        mSendByChannelThread = new SendByChannelThread(mContext, mFilename + mFileTimeStamp);
         mSendByChannelThread.start();
         try {
             mSendByChannelThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        running = false;
+        mRunning = false;
     }
 
     /**
@@ -84,8 +85,8 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     @Override
     public void run() {
-        running = true;
-        lastSensorUpdate = System.currentTimeMillis();
+        mRunning = true;
+        mLastSensorUpdate = System.currentTimeMillis();
         mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_UI);;
     }
 
@@ -99,18 +100,18 @@ public class SensingThread extends Thread implements SensorEventListener {
         Measurement measurement;
         long actualTime = System.currentTimeMillis();
 
-        if (actualTime - lastSensorUpdate > mMeasuringTime) {
-            lastSensorUpdate = actualTime;
+        if (actualTime - mLastSensorUpdate > mMeasuringTime) {
+            mLastSensorUpdate = actualTime;
 
             SendFileToHandHeld(actualTime);
 
             // Isolate the force of gravity with the low-pass filter.
-            gravity[0] = lowPass(event.values[0], gravity[0]);
-            gravity[1] = lowPass(event.values[1], gravity[1]);
-            gravity[2] = lowPass(event.values[2], gravity[2]);
+            mGravity[0] = lowPass(event.values[0], mGravity[0]);
+            mGravity[1] = lowPass(event.values[1], mGravity[1]);
+            mGravity[2] = lowPass(event.values[2], mGravity[2]);
 
             // Remove the gravity contribution with the high-pass filter.
-            measurement = new Measurement(highPass(event.values[0], gravity[0]), highPass(event.values[1], gravity[1]), highPass(event.values[2], gravity[2]), actualTime);
+            measurement = new Measurement(highPass(event.values[0], mGravity[0]), highPass(event.values[1], mGravity[1]), highPass(event.values[2], mGravity[2]), actualTime);
             WriteToMeasurementFile(measurement);
         }
     }
@@ -126,8 +127,9 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     private void CreateMeasurementFile(long actualTime) {
         try {
-            fileTimeStamp = actualTime;
-            measurementsFile = mContext.openFileOutput(FILENAME + fileTimeStamp, Context.MODE_PRIVATE);
+            mFileTimeStamp = actualTime;
+            mFilename = MobileWearConstants.MEASUREMENT_FILENAME_START + mFileTimeStamp;
+            mMeasurementsFile = mContext.openFileOutput(mFilename, Context.MODE_PRIVATE);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -138,7 +140,7 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     private void CloseMeasurementFile() {
         try {
-            measurementsFile.close();
+            mMeasurementsFile.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -150,7 +152,7 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     private void WriteToMeasurementFile(Measurement measurement) {
         try {
-            measurementsFile.write(measurement.toString().getBytes());
+            mMeasurementsFile.write(measurement.toString().getBytes());
             Log.d(LOG_TAG, measurement.toString());
         } catch (IOException e) {
             e.printStackTrace();
@@ -162,9 +164,9 @@ public class SensingThread extends Thread implements SensorEventListener {
      * @param actualTime the current time (millisecond).
      */
     private void SendFileToHandHeld(long actualTime) {
-        if (actualTime - fileTimeStamp > mFileSendingTime) {
+        if (actualTime - mFileTimeStamp > mFileSendingTime) {
             CloseMeasurementFile();
-            mSendByChannelThread = new SendByChannelThread(mContext, FILENAME + fileTimeStamp);
+            mSendByChannelThread = new SendByChannelThread(mContext, mFilename);
             mSendByChannelThread.start();
             CreateMeasurementFile(actualTime);
         }
@@ -178,7 +180,7 @@ public class SensingThread extends Thread implements SensorEventListener {
         this.mFileSendingTime = mFileSendingTime;
     }
 
-    private float lowPass(float current, float gravity) { return gravity * alpha + current * (1 - alpha); }
+    private float lowPass(float current, float gravity) { return gravity * mAlpha + current * (1 - mAlpha); }
 
     private float highPass(float current, float gravity) {
         return current - gravity;
