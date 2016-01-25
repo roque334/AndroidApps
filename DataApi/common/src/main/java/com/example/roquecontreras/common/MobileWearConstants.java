@@ -43,4 +43,7 @@ public class MobileWearConstants {
         public static final int RESULT_CODE_ARRANGEMENT = 0;
         public static final int RESULT_OK = 1;
         public static final int RESULT_ERROR = 0;
+
+        //MEASUREMENT FILE
+        public static final String MEASUREMENT_FILENAME_START = "measurements_";
 }
