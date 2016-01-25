@@ -88,10 +88,11 @@ class MultipartFileRequest extends Request<NetworkResponse> {
 
     @Override
     protected Response<NetworkResponse> parseNetworkResponse(NetworkResponse response) {
+        JSONObject jsonObject;
         try {
             deliverResponse(response);
             try {
-                JSONObject jsonObject = new JSONObject(new String(response.data));
+                jsonObject = new JSONObject(new String(response.data));
                 if (mfile.length() == jsonObject.getLong("file-size")) {
                     mContext.deleteFile(mfile.getName());
                 }
