@@ -37,11 +37,13 @@ public class SignInActivity extends FragmentActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SignInButton signInButton;
+        GoogleSignInOptions gso;
         setContentView(R.layout.activity_sign_in);
 
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestIdToken(WebServerConstants.WEB_SERVER_CLIENT_ID)
                 .build();
@@ -53,7 +55,7 @@ public class SignInActivity extends FragmentActivity implements
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        SignInButton signInButton = (SignInButton) findViewById(R.id.sign_in_button);
+        signInButton = (SignInButton) findViewById(R.id.sign_in_button);
         signInButton.setSize(SignInButton.SIZE_STANDARD);
         setGooglePlusButtonText(signInButton, "Google");
         signInButton.setOnClickListener(this);
@@ -77,35 +79,38 @@ public class SignInActivity extends FragmentActivity implements
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        GoogleSignInResult result;
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
         }
     }
 
     private void handleSignInResult(GoogleSignInResult result) {
+        GoogleSignInAccount acct;
+        String idToken;
         FileOutputStream fos = null;
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
-            GoogleSignInAccount acct = result.getSignInAccount();
-            //String personName = acct.getDisplayName();
-            //String personEmail = acct.getEmail();
-            //String personId = acct.getId();
-            //Uri personPhoto = acct.getPhotoUrl();
-            String idToken = acct.getIdToken();
+            acct = result.getSignInAccount();
+            idToken = acct.getIdToken();
             sendTokenToServerToValidate(idToken);
         } else {
             // Signed out, show unauthenticated UI.
         }
     }
 
+    /**
+     * Sends the idtoken, given by the google authenticator, to the app server.
+     * @param idToken the token given by the google authenticator
+     */
     private void sendTokenToServerToValidate(final String idToken) {
+        JsonObjectRequest jsonObjectRequest;
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(WebServerConstants.ID_TOKEN_LABEL, idToken);
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+        jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
                 , new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -150,11 +155,13 @@ public class SignInActivity extends FragmentActivity implements
 
     protected void setGooglePlusButtonText(SignInButton signInButton,
                                            String buttonText) {
+        View v;
+        TextView tv;
         for (int i = 0; i < signInButton.getChildCount(); i++) {
-            View v = signInButton.getChildAt(i);
+            v = signInButton.getChildAt(i);
 
             if (v instanceof TextView) {
-                TextView tv = (TextView) v;
+                tv = (TextView) v;
                 tv.setTextSize(15);
                 tv.setTypeface(null, Typeface.NORMAL);
                 tv.setText(buttonText);
