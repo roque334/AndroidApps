@@ -36,11 +36,12 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Intent intentSignInActivity;
                 try {
                     Thread.sleep(10000);
                     if (!isInternetConnectionOn(context)) {
                         mProgressDialog.dismiss();
-                        Intent intentSignInActivity = new Intent(context, SignInActivity.class);
+                        intentSignInActivity = new Intent(context, SignInActivity.class);
                         intentSignInActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intentSignInActivity);
                     }
@@ -52,9 +53,11 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
     }
 
     public boolean isInternetConnectionOn(Context context){
+        ConnectivityManager connectivityManager;
+        NetworkInfo activeNetworkInfo;
         boolean result = true;
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) { // connected to the internet
             if (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 // connected to wifi
