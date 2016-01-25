@@ -79,7 +79,7 @@ public class WearableService extends WearableListenerService {
 
     /**
      * Execute the proper actions in accordance of the message path.
-     * The message received can arrenges the sensors over the patients body and creates a
+     * The message received can arranges the sensors over the patients body and creates a
      * notification with its wearing instructions.
      * @param messageEvent the message received.
      */
