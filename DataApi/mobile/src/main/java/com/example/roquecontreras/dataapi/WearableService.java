@@ -49,9 +49,10 @@ public class WearableService extends WearableListenerService {
 
     @Override
     public void onChannelOpened(final Channel channel) {
+        GoogleApiClient googleApiClient;
         Log.d(LOG_TAG, "onChannelOpened: " + channel.getNodeId());
         if (MobileWearConstants.SEND_BY_CHANNEL_PATH.equals(channel.getPath())) {
-            GoogleApiClient googleApiClient = InitializeGoogleApiClient();
+            googleApiClient = InitializeGoogleApiClient();
             WaitGoogleApiClientConnection(googleApiClient);
             if (ReceiveFile(channel, googleApiClient)) {
                 Log.d(LOG_TAG,"onChannelOpened_receiveFile: true");
@@ -65,13 +66,14 @@ public class WearableService extends WearableListenerService {
      * @return the Map with the arrangement key/values.
      */
     private Map readArrangementFile() {
+        InputStream inputStream;
         InputStreamReader inputStreamReader;
         BufferedReader bufferedReader;
         String[] keyValue;
         String receiveString;
         Map result = new HashMap();
         try {
-            InputStream inputStream = openFileInput(MobileWearConstants.ARRANGEMENT_FILENAME);
+            inputStream = openFileInput(MobileWearConstants.ARRANGEMENT_FILENAME);
             if ( inputStream != null ) {
                 inputStreamReader = new InputStreamReader(inputStream);
                 bufferedReader = new BufferedReader(inputStreamReader);
@@ -132,9 +134,10 @@ public class WearableService extends WearableListenerService {
      * @return
      */
     private boolean ReceiveFile(Channel channel, GoogleApiClient googleApiClient) {
+        String filename;
         boolean result = false;
         fileTimeStamp = System.currentTimeMillis();
-        String filename = "measurements_" + channel.getNodeId() + "_" + fileTimeStamp;
+        filename = MobileWearConstants.MEASUREMENT_FILENAME_START + channel.getNodeId() + "_" + fileTimeStamp;
         CreateMeasurementFile(filename);
         if (channel.receiveFile(googleApiClient, Uri.fromFile(this.getFileStreamPath(filename)), false).await().isSuccess()) {
             CloseMeasurementFile();
