@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import com.example.roquecontreras.common.DSPFilter;
 import com.example.roquecontreras.common.Measurement;
 import com.example.roquecontreras.common.MobileWearConstants;
 
@@ -27,12 +28,14 @@ public class SensingThread extends Thread implements SensorEventListener {
 
     //AccelerometerSensor variables
     private SensorManager mSensorManager;
-    private Sensor mSensor;
+    private Sensor mSensorAcceletomer;
+    private boolean mIsFirstAccelerometerSensing;
     private final float mAlpha = 0.8f;
     private float[] mGravity = new float[3];
-    private Long mLastSensorUpdate;
 
-    public Long mMeasuringTime;
+    //GyroscopeSensor variables
+    private Sensor mSensorGyroscope;
+    private boolean mIsFirstGyroscopeSensing;
 
     //File variables
     private FileOutputStream mMeasurementsFile;
@@ -50,7 +53,9 @@ public class SensingThread extends Thread implements SensorEventListener {
     public SensingThread(Context context){
         mContext = context;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorAcceletomer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mIsFirstAccelerometerSensing = mIsFirstGyroscopeSensing = true;
         CreateMeasurementFile(System.currentTimeMillis());
     }
 
@@ -86,8 +91,9 @@ public class SensingThread extends Thread implements SensorEventListener {
     @Override
     public void run() {
         mRunning = true;
-        mLastSensorUpdate = System.currentTimeMillis();
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_UI);;
+        //SensorManager.SENSOR_DELAY_GAME senses every 0.02 seconds (Frecuency Sampling = 50Hz).
+        mSensorManager.registerListener(this, mSensorAcceletomer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mSensorGyroscope, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /**
@@ -97,22 +103,44 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Measurement measurement;
-        long actualTime = System.currentTimeMillis();
+        synchronized (this) {
+            long actualTime;
+            Measurement measurement;
+            actualTime = event.timestamp;
 
-        if (actualTime - mLastSensorUpdate > mMeasuringTime) {
-            mLastSensorUpdate = actualTime;
+            //SendFileToHandHeld(actualTime);
 
-            SendFileToHandHeld(actualTime);
+            switch (event.sensor.getType()) {
 
-            // Isolate the force of gravity with the low-pass filter.
-            mGravity[0] = lowPass(event.values[0], mGravity[0]);
-            mGravity[1] = lowPass(event.values[1], mGravity[1]);
-            mGravity[2] = lowPass(event.values[2], mGravity[2]);
+                case Sensor.TYPE_ACCELEROMETER:
 
-            // Remove the gravity contribution with the high-pass filter.
-            measurement = new Measurement(highPass(event.values[0], mGravity[0]), highPass(event.values[1], mGravity[1]), highPass(event.values[2], mGravity[2]), actualTime);
-            WriteToMeasurementFile(measurement);
+                    if (mIsFirstAccelerometerSensing) {
+                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], true);
+                    } else {
+                        // Noise reduced acceleration of the device's local X, Y and Z axis (m/s^2)
+                        measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], true), actualTime);
+                        WriteToMeasurementFile(measurement);
+
+                        // Isolate the force of gravity with the low-pass filter.
+                        mGravity[0] = lowPass(measurement.getX(), mGravity[0]);
+                        mGravity[1] = lowPass(measurement.getY(), mGravity[1]);
+                        mGravity[2] = lowPass(measurement.getZ(), mGravity[2]);
+
+                        // Magnitude of gravity (m/s^2)
+                        measurement = new Measurement(mGravity[0], mGravity[1], mGravity[2], actualTime);
+                        WriteToMeasurementFile(measurement);
+                    }
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    if (mIsFirstGyroscopeSensing) {
+                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], false);
+                    } else {
+                        // Noise reduced rate of rotation around the device's local X, Y and Z axis (rad/s)
+                        measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], false), actualTime);
+                        WriteToMeasurementFile(measurement);
+                    }
+                    break;
+            }
         }
     }
 
@@ -170,10 +198,6 @@ public class SensingThread extends Thread implements SensorEventListener {
             mSendByChannelThread.start();
             CreateMeasurementFile(actualTime);
         }
-    }
-
-    public void setMeasuringTime(Long mMeasuringTime) {
-        this.mMeasuringTime = mMeasuringTime;
     }
 
     public void setFileSendingTime(Long mFileSendingTime) {
