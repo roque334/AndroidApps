@@ -16,6 +16,13 @@ public class Measurement {
         this.timestamp = timestamp;
     }
 
+    public Measurement(float[] measures, long timestamp) {
+        this.x = measures[0];
+        this.y = measures[1];
+        this.z = measures[2];
+        this.timestamp = timestamp;
+    }
+
     public float getX() {
         return x;
     }
