@@ -24,7 +24,7 @@ public class AccelerometerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
         if (!mSensingThread.isRunning()) {
-            mSensingThread.setMeasuringTime(intent.getExtras().getLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
+            //mSensingThread.setMeasuringTime(intent.getExtras().getLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
             mSensingThread.setFileSendingTime(intent.getExtras().getLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
             mSensingThread.start();
         }
