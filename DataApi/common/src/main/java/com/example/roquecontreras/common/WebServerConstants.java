@@ -11,6 +11,10 @@ public class WebServerConstants {
 
     public static final String LOCAL_WEB_SERVER_UPLOAD_MEASURE_FILE_URL = "http://10.0.2.2:8000/measureUpload";
 
+    public static final String WEB_SERVER_UPLOAD_MEASURE_FILE_URL = "https://moreno-app.herokuapp.com/measureUpload";
+
     public  static final String LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL = "http://10.0.2.2:8000/patientVerify";
+
+    public  static final String WEB_SERVER_VALIDATE_TOKEN_URL = "https://moreno-app.herokuapp.com/patientVerify";
 
 }

@@ -442,7 +442,7 @@ public class MainActivity extends Activity {
      */
     private void sendTextFileToServer(File file) {
         final String idToken = this.mIdToken;
-        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.LOCAL_WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
+        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
                 , new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {

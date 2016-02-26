@@ -110,7 +110,7 @@ public class SignInActivity extends FragmentActivity implements
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(WebServerConstants.ID_TOKEN_LABEL, idToken);
 
-        jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+        jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
                 , new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
