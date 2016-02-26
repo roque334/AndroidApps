@@ -95,7 +95,16 @@ public class MainActivity extends Activity {
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
-        this.mIdToken = savedInstanceState.getString(WebServerConstants.ID_TOKEN_LABEL);
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras == null) {
+                this.mIdToken = null;
+            } else {
+                this.mIdToken = extras.getString(WebServerConstants.ID_TOKEN_LABEL);
+            }
+        } else {
+            this.mIdToken = (String) savedInstanceState.getSerializable(WebServerConstants.ID_TOKEN_LABEL);
+        }
 
         initializeGoogleApiClient();
         arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
