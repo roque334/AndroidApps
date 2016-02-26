@@ -7,6 +7,7 @@ import java.util.Arrays;
  */
 public class DSPFilter {
 
+    private static final float mDCBias = 0;
     private static float[][] accelerometerMedianWindow;
     private static float[][] gyroscopeMedianWindow;
 
@@ -77,6 +78,19 @@ public class DSPFilter {
         num = 0.52762f * ((float) Math.pow(x,3)) + 1.58287f * ((float) Math.pow(x,2)) + 1.58287f * x + 0.52762f;
         dem = 1f * ((float) Math.pow(x,3)) + 1.76004f * ((float) Math.pow(x,2)) + 1.18289f * x + 0.27806f;
         result = num / dem;
+        return result;
+    }
+
+    private static float DCBiasFilter(float x) {
+        return x - mDCBias;
+    }
+
+    private static float DCBiasFilter(float[] x){
+        float result = 0;
+        for (int i = 0; i < x.length; i++) {
+            result += x[i];
+        }
+        result = result / x.length;;
         return result;
     }
 }
