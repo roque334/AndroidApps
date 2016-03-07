@@ -7,6 +7,8 @@ public class MobileWearConstants {
 
         //PATHS
         public static final String ARRANGE_SENSORS_BY_MESSAGE_PATH = "/arrange-sensors-message";
+        public static final String START_ACCLEROMETER_BY_MESSAGE_PATH = "/start-accelerometer-message-service";
+        public static final String STOP_ACCLEROMETER_BY_MESSAGE_PATH = "/stop-accelerometer-message-service";
         public static final String START_ACCLEROMETER_BY_DATAITEM_PATH = "/start-accelerometer-dataitem-service";
         public static final String STOP_ACCLEROMETER_BY_DATAITEM_PATH = "/stop-accelerometer-dataitem-service";
         public static final String SEND_BY_CHANNEL_PATH = "/send-by-channel";
