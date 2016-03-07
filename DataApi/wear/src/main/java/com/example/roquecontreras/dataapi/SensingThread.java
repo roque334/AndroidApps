@@ -73,12 +73,14 @@ public class SensingThread extends Thread implements SensorEventListener {
      * running status.
      */
     public void Terminate() {
+        Log.d(LOG_TAG, "Terminate");
         mSensorManager.unregisterListener(this);
         CloseMeasurementFile();
         mSendByChannelThread = new SendByChannelThread(mContext, mFilename + mFileTimeStamp);
         mSendByChannelThread.start();
         try {
             mSendByChannelThread.join();
+            Log.d(LOG_TAG, "Status_SendByChannelThread: " + mSendByChannelThread.isSucces());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -116,9 +118,11 @@ public class SensingThread extends Thread implements SensorEventListener {
 
                     if (mIsFirstAccelerometerSensing) {
                         DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], true);
+                        mIsFirstAccelerometerSensing = false;
                     } else {
-                        // Noise reduced acceleration of the device's local X, Y and Z axis (m/s^2)
+                        // Noise reduced from acceleration of the device's local X, Y and Z axis (m/s^2)
                         measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], true), actualTime);
+                        Log.d(LOG_TAG, "Acceleration: " + measurement.toString());
                         WriteToMeasurementFile(measurement);
 
                         // Isolate the force of gravity with the low-pass filter.
@@ -134,9 +138,11 @@ public class SensingThread extends Thread implements SensorEventListener {
                 case Sensor.TYPE_GYROSCOPE:
                     if (mIsFirstGyroscopeSensing) {
                         DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], false);
+                        mIsFirstGyroscopeSensing = false;
                     } else {
                         // Noise reduced rate of rotation around the device's local X, Y and Z axis (rad/s)
                         measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], false), actualTime);
+                        Log.d(LOG_TAG, "Rotation: " + measurement.toString());
                         WriteToMeasurementFile(measurement);
                     }
                     break;
@@ -181,7 +187,7 @@ public class SensingThread extends Thread implements SensorEventListener {
     private void WriteToMeasurementFile(Measurement measurement) {
         try {
             mMeasurementsFile.write(measurement.toString().getBytes());
-            Log.d(LOG_TAG, measurement.toString());
+            //Log.d(LOG_TAG, measurement.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
