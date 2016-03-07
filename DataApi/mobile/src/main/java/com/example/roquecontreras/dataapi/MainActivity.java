@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
@@ -124,6 +125,7 @@ public class MainActivity extends Activity {
                     intent.putExtra(MobileWearConstants.WEARABLE_NODES_EXTRA, mDevicesID);
                     startActivityForResult(intent, MobileWearConstants.RESULT_CODE_ARRANGEMENT);
                 } else {
+                    Toast.makeText(getApplicationContext(), "No wear devices detected", Toast.LENGTH_SHORT);
                     Log.d(LOG_TAG, "ArrangeButton_onClick: mDevicesID == null");
                 }
             }
@@ -133,9 +135,9 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 if (!mSensingSwitch.isChecked()) {
-                    mSensingSwitch.setChecked(startSendNotificationUsingDataItemThread(MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH));
+                    mSensingSwitch.setChecked(startSendNotificationUsingMessagesThread(MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH, "start"));
                 } else {
-                    mSensingSwitch.setChecked(!startSendNotificationUsingDataItemThread(MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH));
+                    mSensingSwitch.setChecked(!startSendNotificationUsingMessagesThread(MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH, "stop"));
                 }
             }
         });
@@ -148,7 +150,7 @@ public class MainActivity extends Activity {
                 Matcher matcher;
                 File filesDir;
                 File[] directoryListing;
-                stringPattern = "^" + MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH + "(.*)";
+                stringPattern = "^" + MobileWearConstants.MEASUREMENT_FILENAME_START + "(.*)";
                 pattern = Pattern.compile(stringPattern);
                 filesDir = getApplicationContext().getFilesDir();
                 directoryListing = filesDir.listFiles();
