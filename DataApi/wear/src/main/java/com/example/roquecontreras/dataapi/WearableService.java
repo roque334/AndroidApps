@@ -86,20 +86,55 @@ public class WearableService extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         super.onMessageReceived(messageEvent);
+        NotificationCompat.Builder builder;
+        Notification notification;
+        NotificationManagerCompat notificationManagerCompat;
+        Intent intent;
         String message;
         switch (messageEvent.getPath()) {
             case MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH:
+                Log.d(LOG_TAG, "ArrangeSensors");
                 message = new String(messageEvent.getData());
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
                         .setContentTitle("Wear disposition")
                         .setContentText("Wear on the " + message + ".");
 
                 setNotificationBackgroundImage(builder, message);
-                Notification notification = builder.build();
+                notification = builder.build();
 
-                NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat = NotificationManagerCompat.from(this);
                 notificationManagerCompat.notify(1, notification);
+                break;
+            case MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH:
+                Log.d(LOG_TAG, "StartService");
+                message = new String(messageEvent.getData());
+                builder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Accelerometer Services")
+                        .setContentText("Started.");
+                notification = builder.build();
+
+                notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat.notify(1, notification);
+
+                intent = new Intent(this, AccelerometerService.class);
+                startService(intent);
+                break;
+            case MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH:
+                Log.d(LOG_TAG, "StopService");
+                message = new String(messageEvent.getData());
+                builder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle("Accelerometer Services")
+                        .setContentText("Stopped.");
+                notification = builder.build();
+
+                notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat.notify(1, notification);
+                stopService(new Intent(this, AccelerometerService.class));
+            default:
+                break;
         }
     }
 
