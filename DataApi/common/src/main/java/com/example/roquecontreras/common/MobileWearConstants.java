@@ -1,5 +1,7 @@
 package com.example.roquecontreras.common;
 
+import android.content.Context;
+
 /**
  * Created by Roque Contreras on 16/10/2015.
  */
@@ -48,4 +50,24 @@ public class MobileWearConstants {
 
         //MEASUREMENT FILE
         public static final String MEASUREMENT_FILENAME_START = "measurements_";
+
+        public static String bodyPartToText(Context context, String bodyPart) {
+                String result = "";
+                switch (bodyPart) {
+                        case MobileWearConstants.LARM_MESSAGE:
+                                result = context.getString(R.string.left_arm);
+                                break;
+                        case MobileWearConstants.RARM_MESSAGE:
+                                result = context.getString(R.string.right_arm);
+                                break;
+                        case MobileWearConstants.LLEG_MESSAGE:
+                                result = context.getString(R.string.left_leg);
+                                break;
+                        case MobileWearConstants.RLEG_MESSAGE:
+                                result = context.getString(R.string.right_leg);
+                        default:
+                                break;
+                }
+                return result;
+        }
 }
