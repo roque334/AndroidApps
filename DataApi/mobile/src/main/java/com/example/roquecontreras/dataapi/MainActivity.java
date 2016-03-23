@@ -1,6 +1,8 @@
 package com.example.roquecontreras.dataapi;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -32,7 +34,14 @@ import com.google.android.gms.wearable.Wearable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -46,8 +55,10 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "PhoneActivity";
-    Switch mArrangeSwitch, mSensingSwitch;
-    String[] mDevicesID;
+    private Map<String,String> mArrange;
+
+    private ImageButton mArrangeButton, mStartButton;
+    private Switch mArrangeSwitch, mSensingSwitch;
 
     NetworkChangeReceiver mNetworkChangeReceiver;
 
@@ -57,7 +68,6 @@ public class MainActivity extends Activity {
     private CapabilityApi.CapabilityListener mCapabilityListener = new CapabilityApi.CapabilityListener() {
         @Override
         public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-            Log.d(LOG_TAG, "onCapabilityChanged: " + capabilityInfo.getName());
         }
     };
 
@@ -69,18 +79,15 @@ public class MainActivity extends Activity {
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
-                        Log.d(LOG_TAG, "onConnected: " + connectionHint);
                     }
 
                     @Override
                     public void onConnectionSuspended(int cause) {
-                        Log.d(LOG_TAG, "onConnectionSuspended: " + cause);
                     }
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(ConnectionResult result) {
-                        Log.d(LOG_TAG, "onConnectionFailed: " + result);
                     }
                 })
                 .addApi(Wearable.API)
@@ -91,9 +98,54 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ImageButton arrangeButton, startButton, uploadDataButton, preferencesButton;
+        final ImageButton arrangeButton, uploadDataButton, preferencesButton;
         setContentView(R.layout.activity_main);
+        loadSavedInstanceState(savedInstanceState);
 
+        initializeGoogleApiClient();
+        mArrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
+        mArrangeSwitch = (Switch) findViewById(R.id.arrangement_status);
+        mStartButton = (ImageButton) findViewById(R.id.sesing_imageview);
+        mStartButton.setEnabled(false);
+        mSensingSwitch = (Switch) findViewById(R.id.sensing_status);
+        uploadDataButton = (ImageButton) findViewById(R.id.upload_data_imageview);
+        uploadDataButton.setEnabled(false);
+        preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
+
+        mArrangeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                arrangeButtonOnClick();
+            }
+        });
+
+        mStartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startButtonOnClick();
+            }
+        });
+
+        uploadDataButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadButtonOnClick();
+            }
+        });
+
+        preferencesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                preferencesButtonOnClick();
+            }
+        });
+    }
+
+    /**
+     * Loads the values contained on the Bundle instance.
+     * @param savedInstanceState the Bundle instance.
+     */
+    private void loadSavedInstanceState(Bundle savedInstanceState) {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         if (savedInstanceState == null) {
@@ -106,74 +158,137 @@ public class MainActivity extends Activity {
         } else {
             this.mIdToken = (String) savedInstanceState.getSerializable(WebServerConstants.ID_TOKEN_LABEL);
         }
-
-        initializeGoogleApiClient();
-        arrangeButton = (ImageButton) findViewById(R.id.arrangement_button);
-        mArrangeSwitch = (Switch) findViewById(R.id.arrangement_status);
-        startButton = (ImageButton) findViewById(R.id.sesing_imageview);
-        mSensingSwitch = (Switch) findViewById(R.id.sensing_status);
-        uploadDataButton = (ImageButton) findViewById(R.id.upload_data_imageview);
-        preferencesButton = (ImageButton) findViewById(R.id.preferences_imageview);
-
-        arrangeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG, "ArrangeButton_onClick");
-                mDevicesID = getWearablesNodeIDsThread();
-                if (mDevicesID != null) {
-                    Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
-                    intent.putExtra(MobileWearConstants.WEARABLE_NODES_EXTRA, mDevicesID);
-                    startActivityForResult(intent, MobileWearConstants.RESULT_CODE_ARRANGEMENT);
-                } else {
-                    Toast.makeText(getApplicationContext(), "No wear devices detected", Toast.LENGTH_SHORT);
-                    Log.d(LOG_TAG, "ArrangeButton_onClick: mDevicesID == null");
-                }
-            }
-        });
-
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!mSensingSwitch.isChecked()) {
-                    mSensingSwitch.setChecked(startSendNotificationUsingMessagesThread(MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH, "start"));
-                } else {
-                    mSensingSwitch.setChecked(!startSendNotificationUsingMessagesThread(MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH, "stop"));
-                }
-            }
-        });
-
-        uploadDataButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String stringPattern;
-                Pattern pattern;
-                Matcher matcher;
-                File filesDir;
-                File[] directoryListing;
-                stringPattern = "^" + MobileWearConstants.MEASUREMENT_FILENAME_START + "(.*)";
-                pattern = Pattern.compile(stringPattern);
-                filesDir = getApplicationContext().getFilesDir();
-                directoryListing = filesDir.listFiles();
-                for (File child : directoryListing) {
-                    if (!child.isDirectory()) {
-                        matcher =  pattern.matcher(child.getName());
-                        if (matcher.matches()){
-                            sendTextFileToServer(child);
-                        }
-                    }
-                }
-            }
-        });
-
-        preferencesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-                startActivity(intent);
-
-            }
-        });
     }
+
+    /**
+     * Executes the actions of the arrangeButton onClick.
+     */
+    private void arrangeButtonOnClick() {
+        final String[] devicesID = getWearablesNodeIDsThread();
+        if (devicesID != null) {
+            if (mArrange != null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage(R.string.arrange_dialog_message)
+                        .setTitle(R.string.arrange_dialog_title);
+                builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        deleteFile(MobileWearConstants.ARRANGEMENT_FILENAME);
+                        startArrangeSensorActivity(devicesID);
+                    }
+                });
+                builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            } else {
+                startArrangeSensorActivity(devicesID);
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), MainActivity.this.getString(R.string.devices_not_connected), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Starts the activity of the arrangement of the wear nodes over the patient's body.
+     * @param devicesID the wear IDs currently connected.
+     */
+    private void startArrangeSensorActivity (String[] devicesID) {
+        Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
+        intent.putExtra(MobileWearConstants.WEARABLE_NODES_EXTRA, devicesID);
+        startActivityForResult(intent, MobileWearConstants.RESULT_CODE_ARRANGEMENT);
+    }
+
+    /**
+     * Executes the actions of the startButton onClick.
+     */
+    private void startButtonOnClick() {
+        if (mArrangeSwitch.isChecked()) {
+            startDialog();
+        }else {
+            Toast.makeText(getApplicationContext(), MainActivity.this.getString(R.string.devices_not_set), Toast.LENGTH_SHORT).show();;
+        }
+    }
+
+    /**
+     * Shows the dialog that corresponds to the current sensing state.
+     */
+    private void startDialog(){
+        AlertDialog.Builder builder;
+        final SharedPreferences.Editor editor;
+        builder = new AlertDialog.Builder(MainActivity.this);
+        editor = getSharedPreferences().edit();
+        if (!getSharedPreferences().getBoolean("isSensing", false)) {
+            builder.setMessage(R.string.start_sensing_dialog_message)
+                    .setTitle(R.string.start_sensing_dialog_title);
+            builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    mSensingSwitch.setChecked(startSendNotificationUsingMessagesThread(MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH, "start"));
+                    editor.putBoolean("isSensing", true);
+                    editor.commit();
+                    mArrangeButton.setEnabled(false);
+                }
+            });
+            builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+
+                }
+            });
+        } else {
+            builder.setMessage(R.string.stop_sensing_dialog_message)
+                    .setTitle(R.string.stop_sensing_dialog_title);
+            builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    mSensingSwitch.setChecked(!startSendNotificationUsingMessagesThread(MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH, "stop"));
+                    editor.putBoolean("isSensing", false);
+                    editor.commit();
+                    mArrangeButton.setEnabled(true);
+                }
+            });
+            builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+
+                }
+            });
+        }
+        builder.create().show();
+    }
+
+    /**
+     * Executes the actions of the uploadButton onClick.
+     */
+    private void uploadButtonOnClick(){
+        /*
+        String stringPattern;
+        Pattern pattern;
+        Matcher matcher;
+        File filesDir;
+        File[] directoryListing;
+        stringPattern = "^" + MobileWearConstants.MEASUREMENT_FILENAME_START + "(.*)";
+        pattern = Pattern.compile(stringPattern);
+        filesDir = getApplicationContext().getFilesDir();
+        directoryListing = filesDir.listFiles();
+        for (File child : directoryListing) {
+            if (!child.isDirectory()) {
+                matcher =  pattern.matcher(child.getName());
+                if (matcher.matches()){
+                    sendTextFileToServer(child);
+                }
+            }
+        }
+        */
+    }
+
+    /**
+     * Executes the actions of the preferencesButton onClick.
+     */
+    private void preferencesButtonOnClick(){
+        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+        startActivity(intent);
+    }
+
 
     /**
      * Starts the thread that sends the notification to the cloud node to start/stop
@@ -218,6 +333,21 @@ public class MainActivity extends Activity {
         mNetworkChangeReceiver = new NetworkChangeReceiver();
         filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
         registerReceiver(mNetworkChangeReceiver, filter);
+        readArrangementFile();
+        if (mArrange != null) {
+            mArrangeSwitch.setChecked(true);
+            mStartButton.setEnabled(true);
+        } else {
+            mArrangeSwitch.setChecked(false);
+            mStartButton.setEnabled(false);
+        }
+        if (!getSharedPreferences().getBoolean("isSensing", false)) {
+            mArrangeButton.setEnabled(true);
+            mSensingSwitch.setChecked(false);
+        } else {
+            mArrangeButton.setEnabled(false);
+            mSensingSwitch.setChecked(true);
+        }
     }
 
     @Override
@@ -254,11 +384,14 @@ public class MainActivity extends Activity {
             putDataRequest = dataMapRequest.asPutDataRequest();
             result = Wearable.DataApi.putDataItem(mGoogleApiClient, putDataRequest).await().getStatus().isSuccess();
         } else {
-            Log.e(LOG_TAG, "No connection to wearable available!");
         }
         return result;
     }
 
+    /**
+     * Gets the SharedPreferences of the application.
+     * @return the SharedPreferences of the application.
+     */
     private SharedPreferences getSharedPreferences() {
         return PreferenceManager.getDefaultSharedPreferences(this);
     }
@@ -298,12 +431,9 @@ public class MainActivity extends Activity {
      * @return the array of sensors id currently connected to the WBAN
      */
     private String[] getWearablesNodeIDs() {
-        Log.d(LOG_TAG, "getWearablesNodeIDs");
         CapabilityApi.GetCapabilityResult capabilityResult;
         String[] result = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            Log.d(LOG_TAG, "getWearablesNodeIDs_mGoogleApiClientConnected");
-
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                 capabilityResult = Wearable.CapabilityApi
                         .getCapability(mGoogleApiClient, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY
@@ -312,11 +442,7 @@ public class MainActivity extends Activity {
                     if (capabilityResult.getCapability().getNodes().size() > 0) {
                         result = setNodeToArrayString(capabilityResult.getCapability().getNodes());
                     }
-                } else {
-                    Log.d(LOG_TAG, "getWearablesNodeIDs_capabilityResult: " + capabilityResult.getStatus().getStatusMessage());
                 }
-            } else {
-                Log.d(LOG_TAG, "getWearablesNodeIDs: GoogleClientApi disconnected");
             }
         }
         return result;
@@ -354,29 +480,28 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Sends a message to every sensor node connected to the WBAN to stats/stops their
-     * accelerometer services.
+     * Sends a message to every sensor node weared on the patient's body
+     * to stats/stops their sensing services.
      *
      * @param command the message path.
      * @param message the message to be sent to stats/stops the accelerometer services.
      * @return True if the message went out of the sender device.
      */
     private boolean sendNotificationUsingMessages(String command, String message) {
-        String[] wearableNodes;
+        Iterator<String> wearableNodes;
+        String nodeID;
         boolean result = true;
         if (mGoogleApiClient.isConnected()) {
-            wearableNodes = getWearablesNodeIDs();
+            wearableNodes = mArrange.keySet().iterator();
             if (wearableNodes != null) {
-                for (String nodeID : wearableNodes) {
+                while (wearableNodes.hasNext()) {
+                    nodeID = wearableNodes.next();
                     result = result && Wearable.MessageApi.sendMessage(mGoogleApiClient, nodeID,
                             command, message.getBytes()).await().getStatus().isSuccess();
                 }
-            } else {
-                Log.d(LOG_TAG, "sendNotificationUsingMessages: WearableNodes == null");
             }
         } else {
             result = false;
-            Log.e(LOG_TAG, "No connection to wearable available!");
         }
         return result;
     }
@@ -430,10 +555,7 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
         if (requestCode == MobileWearConstants.RESULT_CODE_ARRANGEMENT) {
-            if (resultCode == RESULT_OK) {
-                mArrangeSwitch.setChecked(true);
-            } else {
-                mArrangeSwitch.setChecked(false);
+            if (resultCode != RESULT_OK) {
             }
         }
     }
@@ -453,12 +575,10 @@ public class MainActivity extends Activity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Log.d("Request", "Response: " + new String(response.data));
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("Request", "Error: " + error.toString());
             }
         }) {
             @Override
@@ -472,4 +592,33 @@ public class MainActivity extends Activity {
         SingletonRequestQueue.getInstance(this).addToRequestQueue(multipartFileRequest);
     }
 
+    /**
+     * Returns the sensors weared over the patient's body.
+     * @return the Map with the arrangement key/values.
+     */
+    private void readArrangementFile() {
+        InputStream inputStream;
+        InputStreamReader inputStreamReader;
+        BufferedReader bufferedReader;
+        String[] keyValue;
+        String receiveString;
+        mArrange = new HashMap<String,String>();
+        try {
+            inputStream = openFileInput(MobileWearConstants.ARRANGEMENT_FILENAME);
+            if ( inputStream != null ) {
+                inputStreamReader = new InputStreamReader(inputStream);
+                bufferedReader = new BufferedReader(inputStreamReader);
+                while ((receiveString = bufferedReader.readLine()) != null ) {
+                    keyValue = receiveString.split(";");
+                    mArrange.put(keyValue[0], keyValue[1]);
+                }
+                inputStream.close();
+            }
+        }
+        catch (FileNotFoundException e) {
+            mArrange = null;
+        } catch (IOException e) {
+            mArrange = null;
+        }
+    }
 }

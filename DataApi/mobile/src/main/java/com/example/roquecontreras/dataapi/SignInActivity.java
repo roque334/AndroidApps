@@ -1,12 +1,16 @@
 package com.example.roquecontreras.dataapi;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -98,6 +102,11 @@ public class SignInActivity extends FragmentActivity implements
             sendTokenToServerToValidate(idToken);
         } else {
             // Signed out, show unauthenticated UI.
+            if (isInternetConnectionOn()) {
+                Toast.makeText(SignInActivity.this, SignInActivity.this.getString(R.string.impossible_sing_in_1), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(SignInActivity.this, SignInActivity.this.getString(R.string.impossible_sing_in_2), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -114,17 +123,16 @@ public class SignInActivity extends FragmentActivity implements
                 , new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.d("Request", "Response: " + response.toString());
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra(WebServerConstants.ID_TOKEN_LABEL, idToken);
                 startActivity(intent);
+                finish();
             }
         }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
             @Override
             public void onErrorResponse(VolleyError error) {
                 //This code is executed if there is an error.
-                Log.d("Request", "Error: " + error.toString());
             }
         }) {
 
@@ -153,6 +161,11 @@ public class SignInActivity extends FragmentActivity implements
 
     }
 
+    /**
+     * Sets the text in the google plus button.
+     * @param signInButton the google plus button.
+     * @param buttonText the text to be set.
+     */
     protected void setGooglePlusButtonText(SignInButton signInButton,
                                            String buttonText) {
         View v;
@@ -168,5 +181,23 @@ public class SignInActivity extends FragmentActivity implements
                 return;
             }
         }
+    }
+
+    public boolean isInternetConnectionOn(){
+        ConnectivityManager connectivityManager;
+        NetworkInfo activeNetworkInfo;
+        boolean result = true;
+        connectivityManager = (ConnectivityManager) SignInActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) { // connected to the internet
+            if (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                // connected to wifi
+            } else if (activeNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+                // connected to the mobile provider's data plan
+            }
+        } else { // not connected to the internet
+            result = false;
+        }
+        return result;
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory
+<!--    <PreferenceCategory
         android:title="@string/measurements"
         android:key="pref_key_measurements_settings">
         <com.example.roquecontreras.dataapi.NumberPickerPreference
@@ -13,6 +13,7 @@
             custom:min="@integer/measurement_sample_minValue"/>
 
     </PreferenceCategory>
+-->
 
     <PreferenceCategory
         android:title="@string/handhelp_wear_sync"
@@ -25,6 +26,7 @@
             android:key="pref_key_handheld_wear_sync_wifi"
             android:title="@string/sync_wifi_title"
             android:defaultValue="true"/>
+        <!--
         <com.example.roquecontreras.dataapi.NumberPickerPreference
             android:key="pref_key_handheld_wear_sync_interval"
             android:title="@string/sync_interval_title"
@@ -32,6 +34,7 @@
             android:defaultValue="@integer/sync_interval_defaultValue"
             android:max="@integer/sync_interval_maxValue"
             custom:min="@integer/sync_interval_minValue"/>
+        -->
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -45,6 +48,7 @@
             android:key="pref_key_handhelp_server_sync_wifi"
             android:title="@string/sync_wifi_title"
             android:defaultValue="true"/>
+        <!--
         <com.example.roquecontreras.dataapi.NumberPickerPreference
             android:key="pref_key_handheld_server_sync_interval"
             android:title="@string/sync_interval_title"
@@ -52,6 +56,7 @@
             android:defaultValue="@integer/sync_interval_defaultValue"
             android:max="@integer/sync_interval_maxValue"
             custom:min="@integer/sync_interval_minValue"/>
+        -->
 
     </PreferenceCategory>
 

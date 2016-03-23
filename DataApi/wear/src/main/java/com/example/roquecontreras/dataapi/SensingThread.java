@@ -5,12 +5,15 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Environment;
 import android.util.Log;
 
 import com.example.roquecontreras.common.DSPFilter;
+import com.example.roquecontreras.common.MeasureType;
 import com.example.roquecontreras.common.Measurement;
 import com.example.roquecontreras.common.MobileWearConstants;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,8 +33,6 @@ public class SensingThread extends Thread implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor mSensorAcceletomer;
     private boolean mIsFirstAccelerometerSensing;
-    private final float mAlpha = 0.8f;
-    private float[] mGravity = new float[3];
 
     //GyroscopeSensor variables
     private Sensor mSensorGyroscope;
@@ -41,11 +42,6 @@ public class SensingThread extends Thread implements SensorEventListener {
     private FileOutputStream mMeasurementsFile;
     private String mFilename;
     private Long mFileTimeStamp;
-
-    private Long mFileSendingTime;
-
-    //SendByChannetThread variables
-    SendByChannelThread mSendByChannelThread;
 
     /**
      * Class constructor specifying the application context.
@@ -72,19 +68,11 @@ public class SensingThread extends Thread implements SensorEventListener {
      * send it to the handheld devices. Finally, sets false to the the current thread
      * running status.
      */
-    public void Terminate() {
-        Log.d(LOG_TAG, "Terminate");
+    public String Terminate() {
         mSensorManager.unregisterListener(this);
         CloseMeasurementFile();
-        mSendByChannelThread = new SendByChannelThread(mContext, mFilename + mFileTimeStamp);
-        mSendByChannelThread.start();
-        try {
-            mSendByChannelThread.join();
-            Log.d(LOG_TAG, "Status_SendByChannelThread: " + mSendByChannelThread.isSucces());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         mRunning = false;
+        return mFilename;
     }
 
     /**
@@ -117,33 +105,38 @@ public class SensingThread extends Thread implements SensorEventListener {
                 case Sensor.TYPE_ACCELEROMETER:
 
                     if (mIsFirstAccelerometerSensing) {
-                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], true);
+                        //DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], true);
                         mIsFirstAccelerometerSensing = false;
                     } else {
-                        // Noise reduced from acceleration of the device's local X, Y and Z axis (m/s^2)
-                        measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], true), actualTime);
-                        Log.d(LOG_TAG, "Acceleration: " + measurement.toString());
+                        // Raw acceleration (m/s^2)
+                        measurement = new Measurement(MeasureType.RAW_ACCELERATION,event.values[0],event.values[1],event.values[2], actualTime);
                         WriteToMeasurementFile(measurement);
 
-                        // Isolate the force of gravity with the low-pass filter.
-                        mGravity[0] = lowPass(measurement.getX(), mGravity[0]);
-                        mGravity[1] = lowPass(measurement.getY(), mGravity[1]);
-                        mGravity[2] = lowPass(measurement.getZ(), mGravity[2]);
-
-                        // Magnitude of gravity (m/s^2)
-                        measurement = new Measurement(mGravity[0], mGravity[1], mGravity[2], actualTime);
+                        /*
+                        // Total acceleration (m/s^2)
+                        measurement = new Measurement(MeasureType.TOTAL_ACCELERATION, DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], true), actualTime);
                         WriteToMeasurementFile(measurement);
+
+                        // Body acceleration (m/s^2)
+                        measurement = new Measurement(MeasureType.BODY_ACCELERATION, DSPFilter.gravitylFiltering(measurement.getX(), measurement.getY(), measurement.getZ()), actualTime);
+                        WriteToMeasurementFile(measurement);
+                        */
                     }
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     if (mIsFirstGyroscopeSensing) {
-                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], false);
+                        //DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], false);
                         mIsFirstGyroscopeSensing = false;
                     } else {
-                        // Noise reduced rate of rotation around the device's local X, Y and Z axis (rad/s)
-                        measurement = new Measurement(DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], false), actualTime);
-                        Log.d(LOG_TAG, "Rotation: " + measurement.toString());
+                        // Raw Angular speed (rad/s)
+                        measurement = new Measurement(MeasureType.RAW_ANGULAR_SPEED, event.values[0], event.values[1], event.values[2], actualTime);
                         WriteToMeasurementFile(measurement);
+
+                        /*
+                        // Angular speed (rad/s)
+                        measurement = new Measurement(MeasureType.ANGULAR_SPEED, DSPFilter.gyroscopeFiltering(event.values[0], event.values[1], event.values[2]), actualTime);
+                        WriteToMeasurementFile(measurement);
+                        */
                     }
                     break;
             }
@@ -160,12 +153,22 @@ public class SensingThread extends Thread implements SensorEventListener {
      * @param actualTime the time (milliseconds) when the file is created.
      */
     private void CreateMeasurementFile(long actualTime) {
+        final File file;
+        File sdcard, dir;
         try {
             mFileTimeStamp = actualTime;
             mFilename = MobileWearConstants.MEASUREMENT_FILENAME_START + mFileTimeStamp;
-            mMeasurementsFile = mContext.openFileOutput(mFilename, Context.MODE_PRIVATE);
+            sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+            dir = new File(sdcard.getAbsolutePath()+ "/Moreno/");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            file = new File(dir, mFilename);
+            if (file.exists()) {
+                file.delete();
+            }
+            mMeasurementsFile = new FileOutputStream(file);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
         }
     }
 
@@ -176,7 +179,6 @@ public class SensingThread extends Thread implements SensorEventListener {
         try {
             mMeasurementsFile.close();
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -187,32 +189,8 @@ public class SensingThread extends Thread implements SensorEventListener {
     private void WriteToMeasurementFile(Measurement measurement) {
         try {
             mMeasurementsFile.write(measurement.toString().getBytes());
-            //Log.d(LOG_TAG, measurement.toString());
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    /**
-     * Sends the current measurement file to the handheld node.
-     * @param actualTime the current time (millisecond).
-     */
-    private void SendFileToHandHeld(long actualTime) {
-        if (actualTime - mFileTimeStamp > mFileSendingTime) {
-            CloseMeasurementFile();
-            mSendByChannelThread = new SendByChannelThread(mContext, mFilename);
-            mSendByChannelThread.start();
-            CreateMeasurementFile(actualTime);
-        }
-    }
-
-    public void setFileSendingTime(Long mFileSendingTime) {
-        this.mFileSendingTime = mFileSendingTime;
-    }
-
-    private float lowPass(float current, float gravity) { return gravity * mAlpha + current * (1 - mAlpha); }
-
-    private float highPass(float current, float gravity) {
-        return current - gravity;
-    }
 }

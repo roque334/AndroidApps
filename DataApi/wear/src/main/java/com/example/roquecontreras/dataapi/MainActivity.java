@@ -2,6 +2,7 @@ package com.example.roquecontreras.dataapi;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
@@ -17,6 +18,7 @@ public class MainActivity extends Activity {
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
+
                 mTextView = (TextView) stub.findViewById(R.id.text);
             }
         });

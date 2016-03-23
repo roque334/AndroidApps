@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.roquecontreras.dataapi" >
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
@@ -35,7 +38,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".AccelerometerService"
+            android:name=".SensorService"
             android:enabled="true"
             android:exported="true" >
         </service>

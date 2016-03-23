@@ -35,9 +35,28 @@
     <string name="sync_interval_title">Sync interval</string>
     <string name="sync_interval_summary">Every %1$s hour(s)</string>
 
+    <!--Dialogs-->
+    <string name="arrange_dialog_title">Create new body device\'s configuration?</string>
+    <string name="arrange_dialog_message">The previous body device\'s configuration will be deleted</string>
+    <string name="start_sensing_dialog_title">Start sensing?</string>
+    <string name="start_sensing_dialog_message"></string>
+    <string name="stop_sensing_dialog_title">Stop sensing?</string>
+    <string name="stop_sensing_dialog_message"></string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!--Toasts-->
+    <string name="impossible_sing_in_1">Check the internet connection</string>
+    <string name="impossible_sing_in_2">Impossible to sign in</string>
+    <string name="devices_not_connected">No wear devices detected</string>
+    <string name="devices_not_set">Set the sensors in your body</string>
+    <string name="data_sent">Data received from %1$s device</string>
+    <string name="data_not_sent">Error in the data received from %1$s device</string>
+
     <!--Others-->
-    <string name="arrangement_status">Arrangement</string>
+    <string name="arrangement_status">Wearing</string>
     <string name="sensing_status">Sensing</string>
     <string name="on_label">ON</string>
     <string name="off_label">OFF</string>
+
 </resources>

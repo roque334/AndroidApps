@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Common</string>
+    <string name="left_arm">Left arm</string>
+    <string name="right_arm">Right arm</string>
+    <string name="left_leg">Left leg</string>
+    <string name="right_leg">Right leg</string>
 </resources>

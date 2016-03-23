@@ -1,5 +1,13 @@
 <resources>
-    <string name="app_name">DataApi</string>
-    <string name="hello_round">Hello Round World!</string>
-    <string name="hello_square">Hello Square World!</string>
+    <string name="app_name">Moreno</string>
+    <string name="hello_round">This application is running in background.</string>
+    <string name="hello_square">This application is running in background.</string>
+    <string name="send_error">The data was not send.</string>
+
+
+    <string name="arrange_title">Wear disposition</string>
+    <string name="arrange_text">Wear on the %1$s.</string>
+    <string name="start_stop_title">Sensing Services</string>
+    <string name="start_text">Started.</string>
+    <string name="stop_text">Stopped.</string>
 </resources>

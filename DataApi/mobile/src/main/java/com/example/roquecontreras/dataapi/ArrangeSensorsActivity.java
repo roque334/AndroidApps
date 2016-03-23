@@ -54,17 +54,14 @@ public class ArrangeSensorsActivity extends Activity {
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
-                        Log.d(LOG_TAG, "onConnected: " + connectionHint);
                     }
                     @Override
                     public void onConnectionSuspended(int cause) {
-                        Log.d(LOG_TAG, "onConnectionSuspended: " + cause);
                     }
                 })
                 .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
                     @Override
                     public void onConnectionFailed(ConnectionResult result) {
-                        Log.d(LOG_TAG, "onConnectionFailed: " + result);
                     }
                 })
                 .addApi(Wearable.API)
@@ -75,8 +72,6 @@ public class ArrangeSensorsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_arrange_sensors);
-
-        Log.d(LOG_TAG, "onCreate");
 
         initializeGoogleApiClient();
         loadExtras(getIntent());
@@ -93,13 +88,12 @@ public class ArrangeSensorsActivity extends Activity {
         arrangeSensorsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Map arrange = startArrangeSensorsUsingMessagesThread(MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
+                Map<String, String> arrange = startArrangeSensorsUsingMessagesThread(MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH);
                 if (arrange != null) {
                     savesSensorArrangement(arrange);
                     setResult(RESULT_OK);
                     finish();
                 } else {
-                    Log.d(LOG_TAG, "arrangeSensorsButton.OnClick: arrange == null");
                     setResult(RESULT_CANCELED);
                     finish();
                 }
@@ -111,14 +105,16 @@ public class ArrangeSensorsActivity extends Activity {
      * Saves the sensor arrangement to long persistent file
      * @param arrange the sensor arrangement
      */
-    private void savesSensorArrangement(Map arrange) {
+    private void savesSensorArrangement(Map<String, String>  arrange) {
         String line;
         FileOutputStream fos = null;
         try {
             fos = openFileOutput(MobileWearConstants.ARRANGEMENT_FILENAME, Context.MODE_PRIVATE);
             for (int i = 0; i < mWearableNodesIDs.length; i++) {
-                line = mWearableNodesIDs[i] + ";" + arrange.get(mWearableNodesIDs[i] + "\n");
-                fos.write(line.getBytes());
+                if (arrange.containsKey(mWearableNodesIDs[i])) {
+                    line = mWearableNodesIDs[i] + ";" + arrange.get(mWearableNodesIDs[i]) + System.lineSeparator();
+                    fos.write(line.getBytes());
+                }
             }
             fos.close();
         } catch (FileNotFoundException e) {
@@ -291,14 +287,14 @@ public class ArrangeSensorsActivity extends Activity {
      * @param command the path that identifies the message.
      * @return the map with every sensorID and its body part; otherwise null.
      */
-    private Map startArrangeSensorsUsingMessagesThread(final String command) {
-        Map result = new HashMap<>();;
-        Future<Map> threadResult;
-        Callable<Map> callable;
+    private Map<String, String> startArrangeSensorsUsingMessagesThread(final String command) {
+        Map<String, String> result = new HashMap<String, String>();
+        Future<Map<String, String>> threadResult;
+        Callable<Map<String, String>> callable;
         ExecutorService es = Executors.newSingleThreadExecutor();
-        callable = new Callable<Map>() {
+        callable = new Callable<Map<String, String>>() {
             @Override
-            public Map call() {
+            public Map<String, String> call() {
                 return arrangeSensorsUsingMessages(command);
             }
         };
@@ -319,11 +315,11 @@ public class ArrangeSensorsActivity extends Activity {
      * @param command the path that identifies the message.
      * @return the map with every sensorID and its body part; otherwise null.
      */
-    private Map arrangeSensorsUsingMessages(String command) {
+    private Map<String, String> arrangeSensorsUsingMessages(String command) {
         String message;
-        Map result;
+        Map<String, String> result;
         ArrayList<CheckBox> checkBoxesWithTrueStatus =  getCheckBoxesByStatus(true);
-        result = new HashMap<>();
+        result = new HashMap<String, String>();
         if (mGoogleApiClient.isConnected()) {
             for(int i = 0; i < checkBoxesWithTrueStatus.size(); i++) {
                 message = getBodyPart(checkBoxesWithTrueStatus.get(i));
@@ -337,7 +333,6 @@ public class ArrangeSensorsActivity extends Activity {
             }
         } else {
             result = null;
-            Log.e(LOG_TAG, "No connection to wearable available!");
         }
         return result;
     }

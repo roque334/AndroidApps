@@ -24,7 +24,6 @@ public class WearableService extends WearableListenerService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand");
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -43,7 +42,6 @@ public class WearableService extends WearableListenerService {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                 switch (dataEvent.getDataItem().getUri().getPath()) {
                     case MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH:
-                        Log.d(LOG_TAG, "StartService");
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
                                 .setContentTitle("Accelerometer Services")
@@ -53,14 +51,13 @@ public class WearableService extends WearableListenerService {
                         notificationManagerCompat = NotificationManagerCompat.from(this);
                         notificationManagerCompat.notify(1, notification);
 
-                        intent = new Intent(this, AccelerometerService.class);
+                        intent = new Intent(this, SensorService.class);
                         DataMap dataMap = DataMapItem.fromDataItem(dataEvent.getDataItem()).getDataMap();
                         intent.putExtra(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, dataMap.getLong(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL));
                         intent.putExtra(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, dataMap.getLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
                         startService(intent);
                         break;
                     case MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH:
-                        Log.d(LOG_TAG, "StopService");
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
                                 .setContentTitle("Accelerometer Services")
@@ -69,7 +66,7 @@ public class WearableService extends WearableListenerService {
 
                         notificationManagerCompat = NotificationManagerCompat.from(this);
                         notificationManagerCompat.notify(1, notification);
-                        stopService(new Intent(this, AccelerometerService.class));
+                        stopService(new Intent(this, SensorService.class));
                     default:
                         break;
                 }
@@ -93,12 +90,11 @@ public class WearableService extends WearableListenerService {
         String message;
         switch (messageEvent.getPath()) {
             case MobileWearConstants.ARRANGE_SENSORS_BY_MESSAGE_PATH:
-                Log.d(LOG_TAG, "ArrangeSensors");
                 message = new String(messageEvent.getData());
                 builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("Wear disposition")
-                        .setContentText("Wear on the " + message + ".");
+                        .setContentTitle(WearableService.this.getString(R.string.arrange_title))
+                        .setContentText(String.format(WearableService.this.getString(R.string.arrange_text), MobileWearConstants.bodyPartToText(WearableService.this, message).toLowerCase()));
 
                 setNotificationBackgroundImage(builder, message);
                 notification = builder.build();
@@ -107,32 +103,30 @@ public class WearableService extends WearableListenerService {
                 notificationManagerCompat.notify(1, notification);
                 break;
             case MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH:
-                Log.d(LOG_TAG, "StartService");
                 message = new String(messageEvent.getData());
                 builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("Accelerometer Services")
-                        .setContentText("Started.");
+                        .setContentTitle(WearableService.this.getString(R.string.start_stop_title))
+                        .setContentText(WearableService.this.getString(R.string.start_text));
                 notification = builder.build();
 
                 notificationManagerCompat = NotificationManagerCompat.from(this);
-                notificationManagerCompat.notify(1, notification);
+                notificationManagerCompat.notify(2, notification);
 
-                intent = new Intent(this, AccelerometerService.class);
+                intent = new Intent(this, SensorService.class);
                 startService(intent);
                 break;
             case MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH:
-                Log.d(LOG_TAG, "StopService");
                 message = new String(messageEvent.getData());
                 builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("Accelerometer Services")
-                        .setContentText("Stopped.");
+                        .setContentTitle(WearableService.this.getString(R.string.start_stop_title))
+                        .setContentText(WearableService.this.getString(R.string.stop_text));
                 notification = builder.build();
 
                 notificationManagerCompat = NotificationManagerCompat.from(this);
-                notificationManagerCompat.notify(1, notification);
-                stopService(new Intent(this, AccelerometerService.class));
+                notificationManagerCompat.notify(3, notification);
+                stopService(new Intent(this, SensorService.class));
             default:
                 break;
         }
@@ -147,20 +141,23 @@ public class WearableService extends WearableListenerService {
         switch (message) {
             case MobileWearConstants.LARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.lhand_notif_background)));
+                        getResources(), R.drawable.lhand_notif_background_1)));
                 break;
             case MobileWearConstants.RARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.rhand_notif_background)));
+                        getResources(), R.drawable.rhand_notif_background_1)));
                 break;
             case MobileWearConstants.LLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.lleg_notif_background)));
+                        getResources(), R.drawable.lleg_notif_background_1)));
                 break;
             case MobileWearConstants.RLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.rleg_notif_background)));
+                        getResources(), R.drawable.rleg_notif_background_1)));
+                break;
             default:
+                builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
+                        getResources(), R.drawable.notif_background)));
                 break;
         }
     }

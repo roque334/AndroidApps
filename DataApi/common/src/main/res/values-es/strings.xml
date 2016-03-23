@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="left_arm">Mano izquierda</string>
+    <string name="right_arm">Mano derecha</string>
+    <string name="left_leg">Pierna izquierda</string>
+    <string name="right_leg">Pierna derecha</string>
+</resources>

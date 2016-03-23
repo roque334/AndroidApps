@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Moreno</string>
+    <string name="hello_round">Esta aplicación se está ejecutando en segundo plano,</string>
+    <string name="hello_square">Esta aplicación se está ejecutando en segundo plano.</string>
+    <string name="send_error">No se pudieron enviar los datos.</string>
+
+    <string name="arrange_title">Configuración</string>
+    <string name="arrange_text">Colocar en la %1$s.</string>
+    <string name="start_stop_title">Muestreo</string>
+    <string name="start_text">Iniciado.</string>
+    <string name="stop_text">Detenido.</string>
+</resources>

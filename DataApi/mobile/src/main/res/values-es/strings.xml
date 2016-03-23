@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MORENO</string>
+
+
+    <string name="title_activity_sign_in">Inicio de sesión</string>
+
+    <string name="welcome_label">Bienvenido</string>
+    <string name="sign_in_label">Por favor inicia tu sesión con: </string>
+
+    <!--Main options-->
+    <string name="arrange_sensor">Configuración de sensores</string>
+    <string name="start_measurement">Iniciar muestreo</string>
+    <string name="stop_measurement">Detener muestreo</string>
+
+    <!--Limbs options-->
+    <string name="title_activity_arrange_sensors">Configuración de sensores</string>
+    <string name="available_sensors_label">Sensores disponibles: </string>
+    <string name="left_arm">Mano izquierda</string>
+    <string name="right_arm">Mano derecha</string>
+    <string name="left_leg">Pierna izquierda</string>
+    <string name="right_leg">Pierna derecha</string>
+    <string name="ok">Ok</string>
+
+    <!--Settings-->
+    <string name="action_settings">Preferencias</string>
+    <string name="measurements">Muestreo</string>
+    <string name="handhelp_wear_sync">Sincronización Handheld &amp; Wear</string>
+    <string name="handhelp_server_sync">Sincronización Handheld &amp; Servidor</string>
+
+    <string name="measurement_sample_title">Frecuencia de muestreo</string>
+    <string name="measurement_sample_summary">Cada %1$s milisegundo(s)</string>
+
+    <string name="sync_notification_title">Notificaciones</string>
+    <string name="sync_wifi_title">Sólo en Wi-Fi</string>
+    <string name="sync_interval_title">Frecuencia de sincronización</string>
+    <string name="sync_interval_summary">Cada %1$s hora(s)</string>
+
+    <!--Dialogs-->
+    <string name="arrange_dialog_title">¿Crear una nueva configuración de sensores?</string>
+    <string name="arrange_dialog_message">Se eliminará la configuración existente</string>
+    <string name="start_sensing_dialog_title">¿Iniciar muestreo?</string>
+    <string name="start_sensing_dialog_message"></string>
+    <string name="stop_sensing_dialog_title">¿Detener muestreo?</string>
+    <string name="stop_sensing_dialog_message"></string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+
+    <!--Toasts-->
+    <string name="impossible_sing_in_1">Verifica la conexión de Internet</string>
+    <string name="impossible_sing_in_2">Imposible iniciar sesión</string>
+    <string name="devices_not_connected">No se detectaron dispositivos wear</string>
+    <string name="devices_not_set">Crea una configuración de sensores</string>
+    <string name="data_sent">Datos recibidos desde el dispositivo de la %1$s</string>
+    <string name="data_not_sent">Error al recibir datos desde el dispositivo de la %1$s</string>
+
+    <!--Others-->
+    <string name="arrangement_status">Colocados</string>
+    <string name="sensing_status">Sensando</string>
+    <string name="on_label">ON</string>
+    <string name="off_label">OFF</string>
+</resources>
