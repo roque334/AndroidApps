@@ -141,19 +141,19 @@ public class WearableService extends WearableListenerService {
         switch (message) {
             case MobileWearConstants.LARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.lhand_notif_background_1)));
+                        getResources(), R.drawable.lhand_notif_background)));
                 break;
             case MobileWearConstants.RARM_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.rhand_notif_background_1)));
+                        getResources(), R.drawable.rhand_notif_background)));
                 break;
             case MobileWearConstants.LLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.lleg_notif_background_1)));
+                        getResources(), R.drawable.lleg_notif_background)));
                 break;
             case MobileWearConstants.RLEG_MESSAGE:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
-                        getResources(), R.drawable.rleg_notif_background_1)));
+                        getResources(), R.drawable.rleg_notif_background)));
                 break;
             default:
                 builder.extend(new NotificationCompat.WearableExtender().setBackground(BitmapFactory.decodeResource(
