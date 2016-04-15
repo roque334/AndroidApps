@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.IntentCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -124,10 +125,10 @@ public class SignInActivity extends FragmentActivity implements
             @Override
             public void onResponse(JSONObject response) {
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | IntentCompat.FLAG_ACTIVITY_CLEAR_TASK);
                 intent.putExtra(WebServerConstants.ID_TOKEN_LABEL, idToken);
-                startActivity(intent);
-                finish();
+                SignInActivity.this.getApplicationContext().startActivity(intent);
+                //finish();
             }
         }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
             @Override
