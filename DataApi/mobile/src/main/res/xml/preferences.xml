@@ -16,7 +16,7 @@
 -->
 
     <PreferenceCategory
-        android:title="@string/handhelp_wear_sync"
+        android:title="@string/handheld_wear_sync"
         android:key="pref_key_handheld_wear_sync_settings">
         <CheckBoxPreference
             android:key="pref_key_handheld_wear_sync_notification"
@@ -38,14 +38,14 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/handhelp_server_sync"
-        android:key="pref_key_handhelp_server_sync_settings">
+        android:title="@string/handheld_server_sync"
+        android:key="pref_key_handheld_server_sync_settings">
         <CheckBoxPreference
-            android:key="pref_key_handhelp_server_sync_notification"
+            android:key="pref_key_handheld_server_sync_notification"
             android:title="@string/sync_notification_title"
             android:defaultValue="true"/>
         <CheckBoxPreference
-            android:key="pref_key_handhelp_server_sync_wifi"
+            android:key="pref_key_handheld_server_sync_wifi"
             android:title="@string/sync_wifi_title"
             android:defaultValue="true"/>
         <!--
