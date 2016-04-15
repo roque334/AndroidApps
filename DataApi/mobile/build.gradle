@@ -38,5 +38,3 @@ dependencies {
     compile 'com.google.android.gms:play-services:8.3.0'
     apply plugin: 'com.google.gms.google-services'
 }
-
-
