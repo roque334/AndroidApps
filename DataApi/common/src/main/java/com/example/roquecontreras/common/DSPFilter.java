@@ -1,5 +1,8 @@
 package com.example.roquecontreras.common;
 
+import android.hardware.Sensor;
+import android.util.Log;
+
 import java.util.Arrays;
 
 /**
@@ -7,98 +10,107 @@ import java.util.Arrays;
  */
 public class DSPFilter {
 
+    final private static float[] aLow = new float[]{1.76004f,1.18289f,0.27806f};
+    final private static float[] bLow = new float[]{0.52762f,1.58287f,1.58287f,0.52762f};
+
+    final private static float[] aHigh = {-2.92461f, 2.85203f, -0.92737f};
+    final private static float[] bHigh = {0.96300f, -2.88900f, 2.88900f, -0.96300f};
+
     private static float[][] accelerometerMedianWindow;
-    private static float[] mGravity;
-    private static final float mAlpha = 0.8f;
+    private static float[][] xAccelerometerButterWindow;
+    private static float[][] yAccelerometerButterWindow;
+
+    private static float[][] gravityMedianWindow;
+    private static float[][] xGravityButterWindow;
+    private static float[][] yGravityButterWindow;
 
     private static float[][] gyroscopeMedianWindow;
-    private static float[] mDCBias;
-    private static float mDCBiasCounter;
+    private static float[][] xLowGyroscopeButterWindow;
+    private static float[][] yLowGyroscopeButterWindow;
+    private static float[][] xHighGyroscopeButterWindow;
+    private static float[][] yHighGyroscopeButterWindow;
 
     /**
      * Initializes the windows to do the filtering process.
      * @param x the value of the X axis.
      * @param y the value of the Y axis.
      * @param z the value of the Z axis.
-     * @param isAccelerometerValue indicates if the values are fom the accelerometer sensor.
+     * @param type indicates the sensor.
      */
-    public static void initFilter(float x, float y, float z, boolean isAccelerometerValue) {
+    public static void initFilter(float x, float y, float z, int type) {
         if (accelerometerMedianWindow == null) {
             accelerometerMedianWindow = new float[3][];
-            mGravity = new float[3];
-            accelerometerMedianWindow[0] = new float[3];
-            accelerometerMedianWindow[1] = new float[3];
-            accelerometerMedianWindow[2] = new float[3];
-            Arrays.fill(accelerometerMedianWindow[0],0f);
-            Arrays.fill(accelerometerMedianWindow[1],0f);
-            Arrays.fill(accelerometerMedianWindow[2],0f);
-            Arrays.fill(mGravity,0f);
+            xAccelerometerButterWindow = new float[3][];
+            yAccelerometerButterWindow = new float[3][];
+            for (int i = 0; i < accelerometerMedianWindow.length; i++) {
+                accelerometerMedianWindow[i] = new float[3];
+                Arrays.fill(accelerometerMedianWindow[i], 0f);
+            }
+            for (int i = 0; i < xAccelerometerButterWindow.length; i++) {
+                xAccelerometerButterWindow[i] = new float[4];
+                yAccelerometerButterWindow[i] = new float[3];
+                Arrays.fill(xAccelerometerButterWindow[i], 0f);
+                Arrays.fill(yAccelerometerButterWindow[i], 0f);
+            }
+        }
+
+        if (gravityMedianWindow == null) {
+            gravityMedianWindow = new float[3][];
+            xGravityButterWindow = new float[3][];
+            yGravityButterWindow = new float[3][];
+            for (int i = 0; i < gravityMedianWindow.length; i++) {
+                gravityMedianWindow[i] = new float[3];
+                Arrays.fill(gravityMedianWindow[i], 0f);
+            }
+            for (int i = 0; i < xGravityButterWindow.length; i++) {
+                xGravityButterWindow[i] = new float[4];
+                yGravityButterWindow[i] = new float[3];
+                Arrays.fill(xGravityButterWindow[i], 0f);
+                Arrays.fill(yGravityButterWindow[i], 0f);
+            }
         }
 
         if (gyroscopeMedianWindow == null) {
-            mDCBias = new float[3];
             gyroscopeMedianWindow = new float[3][];
-            gyroscopeMedianWindow[0] = new float[3];
-            gyroscopeMedianWindow[1] = new float[3];
-            gyroscopeMedianWindow[2] = new float[3];
-            mDCBiasCounter = 0;
-            Arrays.fill(gyroscopeMedianWindow[0],0f);
-            Arrays.fill(gyroscopeMedianWindow[1],0f);
-            Arrays.fill(gyroscopeMedianWindow[2],0f);
+            xLowGyroscopeButterWindow = new float[3][];
+            yLowGyroscopeButterWindow = new float[3][];
+            xHighGyroscopeButterWindow = new float[3][];
+            yHighGyroscopeButterWindow = new float[3][];
+            for (int i = 0; i < gyroscopeMedianWindow.length; i++) {
+                gyroscopeMedianWindow[i] = new float[3];
+                Arrays.fill(gyroscopeMedianWindow[i], 0f);
+            }
+            for (int i = 0; i < xLowGyroscopeButterWindow.length; i++) {
+                xLowGyroscopeButterWindow[i] = new float[4];
+                yLowGyroscopeButterWindow[i] = new float[3];
+                Arrays.fill(xLowGyroscopeButterWindow[i], 0f);
+                Arrays.fill(yLowGyroscopeButterWindow[i], 0f);
+            }
+            for (int i = 0; i < xHighGyroscopeButterWindow.length; i++) {
+                xHighGyroscopeButterWindow[i] = new float[4];
+                yHighGyroscopeButterWindow[i] = new float[3];
+                Arrays.fill(xHighGyroscopeButterWindow[i], 0f);
+                Arrays.fill(yHighGyroscopeButterWindow[i], 0f);
+            }
         }
 
-        if (isAccelerometerValue) {
-            accelerometerMedianWindow[0][1] = x;
-            accelerometerMedianWindow[1][1] = y;
-            accelerometerMedianWindow[2][1] = z;
-        } else {
-            gyroscopeMedianWindow[0][1] = x;
-            gyroscopeMedianWindow[1][1] = y;
-            gyroscopeMedianWindow[2][1] = z;
+        switch (type) {
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                accelerometerMedianWindow[0][1] = x;
+                accelerometerMedianWindow[1][1] = y;
+                accelerometerMedianWindow[2][1] = z;
+                break;
+            case Sensor.TYPE_GRAVITY:
+                gravityMedianWindow[0][1] = x;
+                gravityMedianWindow[1][1] = y;
+                gravityMedianWindow[2][1] = z;
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                gyroscopeMedianWindow[0][1] = x;
+                gyroscopeMedianWindow[1][1] = y;
+                gyroscopeMedianWindow[2][1] = z;
+                break;
         }
-    }
-
-    /**
-     * Filtes the gravity component of the accelerometer values.
-     * @param x the value of the X axis.
-     * @param y the value of the Y axis.
-     * @param z the value of the Z axis.
-     * @return the body acceleration.
-     */
-    public static float[] gravitylFiltering(float x, float y, float z) {
-        float[] result;
-        result = new float[3];
-        mGravity[0] = mAlpha * mGravity[0] + (1 - mAlpha) * x;
-        mGravity[1] = mAlpha * mGravity[1] + (1 - mAlpha) * y;
-        mGravity[2] = mAlpha * mGravity[2] + (1 - mAlpha) * z;
-
-        result[0] = x - mGravity[0];
-        result[1] = y - mGravity[1];
-        result[2] = z - mGravity[2];
-
-        return result;
-    }
-
-    /**
-     * Filters the gyroscope values.
-     * @param x the value of the X axis.
-     * @param y the value of the Y axis.
-     * @param z the value of the Z axis.
-     * @return the angular speed.
-     */
-    public static float[] gyroscopeFiltering(float x, float y, float z) {
-        float[] result, aux;
-        result = new float[3];
-        aux = new float[3];
-        aux = smoothingAndFiltering(x, y, z, false);
-        mDCBiasCounter += 1;
-        mDCBias[0] = ((mDCBias[0] * (mDCBiasCounter-1)) + aux[0])/mDCBiasCounter;
-        mDCBias[1] = ((mDCBias[1] * (mDCBiasCounter-1)) + aux[1])/mDCBiasCounter;
-        mDCBias[2] = ((mDCBias[2] * (mDCBiasCounter-1)) + aux[2])/mDCBiasCounter;
-        result[0] = aux[0] - mDCBias[0];
-        result[1] = aux[1] - mDCBias[1];
-        result[2] = aux[2] - mDCBias[2];
-        return result;
     }
 
     /**
@@ -106,28 +118,225 @@ public class DSPFilter {
      * @param x the value of the X axis.
      * @param y the value of the Y axis.
      * @param z the value of the Z axis.
-     * @param isAccelerometerValue indicates if the values are fom the accelerometer sensor.
+     * @param type indicates the sensor.
      * @return the filtered values of the sensor.
      */
-    public static float[] smoothingAndFiltering(float x, float y, float z, boolean isAccelerometerValue) {
+    public static float[] smoothingAndFiltering(float x, float y, float z, int type) {
         float[] result;
         result = new float[3];
-        if (isAccelerometerValue) {
-            accelerometerMedianWindow[0][2] = x;
-            accelerometerMedianWindow[1][2] = y;
-            accelerometerMedianWindow[2][2] = z;
-            result[0] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(accelerometerMedianWindow[0]));
-            result[1] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(accelerometerMedianWindow[1]));
-            result[2] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(accelerometerMedianWindow[2]));
-        } else {
-            gyroscopeMedianWindow[0][2] = x;
-            gyroscopeMedianWindow[1][2] = y;
-            gyroscopeMedianWindow[2][2] = z;
-            result[0] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(gyroscopeMedianWindow[0]));
-            result[1] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(gyroscopeMedianWindow[1]));
-            result[2] = thirdOrderButterWorthFilter(thirdOrderMedianFilter(gyroscopeMedianWindow[2]));
+        switch (type) {
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                accelerometerMedianWindow[0][2] = x;
+                accelerometerMedianWindow[1][2] = y;
+                accelerometerMedianWindow[2][2] = z;
 
+                advanceInLowButterWindow(type, true);
+                xAccelerometerButterWindow[0][0] = thirdOrderMedianFilter(accelerometerMedianWindow[0]);
+                xAccelerometerButterWindow[1][0] = thirdOrderMedianFilter(accelerometerMedianWindow[1]);
+                xAccelerometerButterWindow[2][0] = thirdOrderMedianFilter(accelerometerMedianWindow[2]);
+                result = thirdOrderButterWorthLowPassTimeInvariantFilter(type);
+                advanceInLowButterWindow(type, false);
+                yAccelerometerButterWindow[0][0] = result[0];
+                yAccelerometerButterWindow[1][0] = result[1];
+                yAccelerometerButterWindow[2][0] = result[2];
+                break;
+            case Sensor.TYPE_GRAVITY:
+                gravityMedianWindow[0][2] = x;
+                gravityMedianWindow[1][2] = y;
+                gravityMedianWindow[2][2] = z;
+
+                advanceInLowButterWindow(type, true);
+                xGravityButterWindow[0][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[0]);
+                xGravityButterWindow[1][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[1]);
+                xGravityButterWindow[2][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[2]);
+                result = thirdOrderButterWorthLowPassTimeInvariantFilter(type);
+                advanceInLowButterWindow(type, false);
+                yGravityButterWindow[0][0] = result[0];
+                yGravityButterWindow[1][0] = result[1];
+                yGravityButterWindow[2][0] = result[2];
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                gyroscopeMedianWindow[0][2] = x;
+                gyroscopeMedianWindow[1][2] = y;
+                gyroscopeMedianWindow[2][2] = z;
+
+                advanceInLowButterWindow(type, true);
+                xLowGyroscopeButterWindow[0][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[0]);
+                xLowGyroscopeButterWindow[1][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[1]);
+                xLowGyroscopeButterWindow[2][0] = thirdOrderMedianFilter(gyroscopeMedianWindow[2]);
+                result = thirdOrderButterWorthLowPassTimeInvariantFilter(type);
+                advanceInLowButterWindow(type, false);
+                yLowGyroscopeButterWindow[0][0] = result[0];
+                yLowGyroscopeButterWindow[1][0] = result[1];
+                yLowGyroscopeButterWindow[2][0] = result[2];
+
+                advanceInHighButterWindow(true);
+                xHighGyroscopeButterWindow[0][0] = result[0];
+                xHighGyroscopeButterWindow[1][0] = result[1];
+                xHighGyroscopeButterWindow[2][0] = result[2];
+                result = thirdOrderButterWorthHighPassTimeInvariantFilter();
+                advanceInHighButterWindow(false);
+                yHighGyroscopeButterWindow[0][0] = result[0];
+                yHighGyroscopeButterWindow[1][0] = result[1];
+                yHighGyroscopeButterWindow[2][0] = result[2];
+                break;
         }
+        return result;
+    }
+
+    /**
+     * Advances int the windows of the Low-Pass Butter Filter.
+     * @param type the type of sensor.
+     * @param isInput the windows type.
+     */
+    private static void advanceInLowButterWindow(int type, boolean isInput) {
+        switch (type) {
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                if (isInput) {
+                    for (int i = 0; i < xAccelerometerButterWindow.length; i++) {
+                        xAccelerometerButterWindow[i][3] = xAccelerometerButterWindow[i][2];
+                        xAccelerometerButterWindow[i][2] = xAccelerometerButterWindow[i][1];
+                        xAccelerometerButterWindow[i][1] = xAccelerometerButterWindow[i][0];
+                    }
+                } else {
+                    for (int i = 0; i < yAccelerometerButterWindow.length; i++) {
+                        yAccelerometerButterWindow[i][2] = yAccelerometerButterWindow[i][1];
+                        yAccelerometerButterWindow[i][1] = yAccelerometerButterWindow[i][0];
+                    }
+                }
+                break;
+            case Sensor.TYPE_GRAVITY:
+                if (isInput) {
+                    for (int i = 0; i < xGravityButterWindow.length; i++) {
+                        xGravityButterWindow[i][3] = xGravityButterWindow[i][2];
+                        xGravityButterWindow[i][2] = xGravityButterWindow[i][1];
+                        xGravityButterWindow[i][1] = xGravityButterWindow[i][0];
+                    }
+                } else {
+                    for (int i = 0; i < yGravityButterWindow.length; i++) {
+                        yGravityButterWindow[i][2] = yGravityButterWindow[i][1];
+                        yGravityButterWindow[i][1] = yGravityButterWindow[i][0];
+                    }
+                }
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                if (isInput) {
+                    for (int i = 0; i < xLowGyroscopeButterWindow.length; i++) {
+                        xLowGyroscopeButterWindow[i][3] = xLowGyroscopeButterWindow[i][2];
+                        xLowGyroscopeButterWindow[i][2] = xLowGyroscopeButterWindow[i][1];
+                        xLowGyroscopeButterWindow[i][1] = xLowGyroscopeButterWindow[i][0];
+                    }
+                } else {
+                    for (int i = 0; i < yLowGyroscopeButterWindow.length; i++) {
+                        yLowGyroscopeButterWindow[i][2] = yLowGyroscopeButterWindow[i][1];
+                        yLowGyroscopeButterWindow[i][1] = yLowGyroscopeButterWindow[i][0];
+                    }
+                }
+                break;
+        }
+    }
+
+    /**
+     * Applies a a pre-build low-pass butter worth filter over a values with fc = 20Hz.
+     * @param type indicates the sensor.
+     * @return the value filtered.
+     */
+    private static float[] thirdOrderButterWorthLowPassTimeInvariantFilter(int type){
+        float [] aux1,aux2, result;
+        aux1 = new float[3];
+        aux2 = new float[3];
+        result = new float[3];
+        Arrays.fill(aux1, 0f);
+        Arrays.fill(aux2, 0f);
+        switch (type) {
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                for (int i = 0; i < bLow.length; i++) {
+                    aux1[0] += bLow[i] * xAccelerometerButterWindow[0][i];
+                    aux1[1] += bLow[i] * xAccelerometerButterWindow[1][i];
+                    aux1[2] += bLow[i] * xAccelerometerButterWindow[2][i];
+                }
+                for (int i = 0; i < aLow.length; i++) {
+                    aux2[0] += aLow[i] * yAccelerometerButterWindow[0][i];
+                    aux2[1] += aLow[i] * yAccelerometerButterWindow[1][i];
+                    aux2[2] += aLow[i] * yAccelerometerButterWindow[2][i];
+                }
+                break;
+            case Sensor.TYPE_GRAVITY:
+                for (int i = 0; i < bLow.length; i++) {
+                    aux1[0] += bLow[i] * xGravityButterWindow[0][i];
+                    aux1[1] += bLow[i] * xGravityButterWindow[1][i];
+                    aux1[2] += bLow[i] * xGravityButterWindow[2][i];
+                }
+                for (int i = 0; i < aLow.length; i++) {
+                    aux2[0] += aLow[i] * yGravityButterWindow[0][i];
+                    aux2[1] += aLow[i] * yGravityButterWindow[1][i];
+                    aux2[2] += aLow[i] * yGravityButterWindow[2][i];
+                }
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                for (int i = 0; i < bLow.length; i++) {
+                    aux1[0] += bLow[i] * xLowGyroscopeButterWindow[0][i];
+                    aux1[1] += bLow[i] * xLowGyroscopeButterWindow[1][i];
+                    aux1[2] += bLow[i] * xLowGyroscopeButterWindow[2][i];
+                }
+                for (int i = 0; i < aLow.length; i++) {
+                    aux2[0] += aLow[i] * yLowGyroscopeButterWindow[0][i];
+                    aux2[1] += aLow[i] * yLowGyroscopeButterWindow[1][i];
+                    aux2[2] += aLow[i] * yLowGyroscopeButterWindow[2][i];
+                }
+                break;
+        }
+        result[0] = aux1[0] - aux2[0];
+        result[1] = aux1[1] - aux2[1];
+        result[2] = aux1[2] - aux2[2];
+        return result;
+    }
+
+    /**
+     * Advances in the windows of the High-Pass Butter Filter.
+     * @param isInput the windows type.
+     */
+    private static void advanceInHighButterWindow(boolean isInput) {
+
+        if (isInput) {
+            for (int i = 0; i < xHighGyroscopeButterWindow.length; i++) {
+                xHighGyroscopeButterWindow[i][3] = xHighGyroscopeButterWindow[i][2];
+                xHighGyroscopeButterWindow[i][2] = xHighGyroscopeButterWindow[i][1];
+                xHighGyroscopeButterWindow[i][1] = xHighGyroscopeButterWindow[i][0];
+            }
+        } else {
+            for (int i = 0; i < yHighGyroscopeButterWindow.length; i++) {
+                yHighGyroscopeButterWindow[i][2] = yHighGyroscopeButterWindow[i][1];
+                yHighGyroscopeButterWindow[i][1] = yHighGyroscopeButterWindow[i][0];
+            }
+        }
+    }
+
+    /**
+     * Applies a a pre-build high-pass butter worth filter over a values with fc = 0.3Hz.
+     * @return the value filtered.
+     */
+    private static float[] thirdOrderButterWorthHighPassTimeInvariantFilter() {
+        float[] aux1, aux2, result;
+        aux1 = new float[3];
+        aux2 = new float[3];
+        result = new float[3];
+        Arrays.fill(aux1, 0f);
+        Arrays.fill(aux2, 0f);
+        for (int i = 0; i < bHigh.length; i++) {
+            aux1[0] += bHigh[i] * xHighGyroscopeButterWindow[0][i];
+            aux1[1] += bHigh[i] * xHighGyroscopeButterWindow[1][i];
+            aux1[2] += bHigh[i] * xHighGyroscopeButterWindow[2][i];
+        }
+        for (int i = 0; i < aHigh.length; i++) {
+            aux2[0] += aHigh[i] * yHighGyroscopeButterWindow[0][i];
+            aux2[1] += aHigh[i] * yHighGyroscopeButterWindow[1][i];
+            aux2[2] += aHigh[i] * yHighGyroscopeButterWindow[2][i];
+        }
+
+        result[0] = aux1[0] - aux2[0];
+        result[1] = aux1[1] - aux2[1];
+        result[2] = aux1[2] - aux2[2];
         return result;
     }
 
@@ -137,45 +346,17 @@ public class DSPFilter {
      * @return the value filtered.
      */
     private static float thirdOrderMedianFilter(float[] window){
-        float[] auxilarWindow = new float[3];
+        float[] auxWindow = new float[window.length];
         float result;
-        for(int i=0;i<window.length;i++) {
-            auxilarWindow[i] = window[i];
+        for(int i=0;i<auxWindow.length;i++) {
+            auxWindow[i] = window[i];
         }
+        Arrays.sort(auxWindow);
+        result = auxWindow[1];
+
         window[0] = window[1];
         window[1] = window[2];
 
-        Arrays.sort(auxilarWindow);
-
-        result = auxilarWindow[1];
-
-        return result;
-    }
-
-    /**
-     * Applies a a pre-build butter worth filter over a values.
-     * @param x the value to filter.
-     * @return the value filtered.
-     */
-    private static float thirdOrderButterWorthFilter(float x){
-        float num,dem,result;
-        num = 0.52762f * ((float) Math.pow(x,3)) + 1.58287f * ((float) Math.pow(x,2)) + 1.58287f * x + 0.52762f;
-        dem = 1f * ((float) Math.pow(x,3)) + 1.76004f * ((float) Math.pow(x,2)) + 1.18289f * x + 0.27806f;
-        result = num / dem;
-        return result;
-    }
-
-    /**
-     * Calculates the DC component from a signal.
-     * @param x the signal.
-     * @return the DC component.
-     */
-    private static float DCBiasFilter(float[] x){
-        float result = 0;
-        for (int i = 0; i < x.length; i++) {
-            result += x[i];
-        }
-        result = result / x.length;;
         return result;
     }
 }
