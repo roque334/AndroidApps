@@ -164,7 +164,8 @@ public class MainActivity extends Activity {
      * Executes the actions of the arrangeButton onClick.
      */
     private void arrangeButtonOnClick() {
-        final String[] devicesID = getWearablesNodeIDsThread();
+        final String[] devicesID;
+        devicesID = getWearablesNodeIDsThread();
         if (devicesID != null) {
             if (mArrange != null) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
