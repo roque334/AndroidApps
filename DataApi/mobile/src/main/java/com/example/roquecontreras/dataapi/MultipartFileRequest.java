@@ -118,17 +118,17 @@ class MultipartFileRequest extends Request<NetworkResponse> {
         mErrorListener.onErrorResponse(error);
     }
 
-    private void buildTextPart(DataOutputStream dataOutputStream, String parameterValue) {
+    private void buildTextPart(DataOutputStream dataOutputStream, StringBuilder parameterValue) {
         try {
-            dataOutputStream.writeBytes(parameterValue);
+            dataOutputStream.writeBytes(parameterValue.toString());
         } catch (IOException e) {
             Log.d("Request", "buildTextPart: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private String readFromFile(File file) {
-        String contents;
+    private StringBuilder readFromFile(File file) {
+        StringBuilder contents = new StringBuilder();
         FileInputStream fis;
         byte[] bytes;
         int length;
@@ -146,7 +146,7 @@ class MultipartFileRequest extends Request<NetworkResponse> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        contents = new String(bytes);
+        contents.append(new String(bytes));
         return contents;
     }
 }
