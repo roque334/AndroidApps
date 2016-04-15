@@ -25,8 +25,8 @@
     <!--Settings-->
     <string name="action_settings">Preferencias</string>
     <string name="measurements">Muestreo</string>
-    <string name="handhelp_wear_sync">Sincronización Handheld &amp; Wear</string>
-    <string name="handhelp_server_sync">Sincronización Handheld &amp; Servidor</string>
+    <string name="handheld_wear_sync">Sincronización Handheld &amp; Wear</string>
+    <string name="handheld_server_sync">Sincronización Handheld &amp; Servidor</string>
 
     <string name="measurement_sample_title">Frecuencia de muestreo</string>
     <string name="measurement_sample_summary">Cada %1$s milisegundo(s)</string>
@@ -37,6 +37,8 @@
     <string name="sync_interval_summary">Cada %1$s hora(s)</string>
 
     <!--Dialogs-->
+    <string name="no_internet_connection_title">Por favor espere</string>
+    <string name="no_internet_connection_message">Conectando...</string>
     <string name="arrange_dialog_title">¿Crear una nueva configuración de sensores?</string>
     <string name="arrange_dialog_message">Se eliminará la configuración existente</string>
     <string name="start_sensing_dialog_title">¿Iniciar muestreo?</string>
@@ -51,8 +53,8 @@
     <string name="impossible_sing_in_2">Imposible iniciar sesión</string>
     <string name="devices_not_connected">No se detectaron dispositivos wear</string>
     <string name="devices_not_set">Crea una configuración de sensores</string>
-    <string name="data_sent">Datos recibidos desde el dispositivo de la %1$s</string>
-    <string name="data_not_sent">Error al recibir datos desde el dispositivo de la %1$s</string>
+    <string name="data_sent">Datos recibidos: %1$s</string>
+    <string name="data_not_sent">Error de sincronización: %1$s</string>
 
     <!--Others-->
     <string name="arrangement_status">Colocados</string>
