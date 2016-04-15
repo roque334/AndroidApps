@@ -105,12 +105,6 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
             channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
             if (channelResult.getStatus().isSuccess()) {
                 mChannel = channelResult.getChannel();
-                sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-                dir = new File(sdcard.getAbsolutePath() + "/Moreno/");
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-                mfile = new File(dir, mMeasurementsFilename);
                 mChannel.getOutputStream(mGoogleApiClient).setResultCallback(this);
             } else {
                 Toast.makeText(mContext, mContext.getString(R.string.send_error), Toast.LENGTH_SHORT).show();
@@ -216,7 +210,7 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
             os = getOutputStreamResult.getOutputStream();
             try {
 
-                fis = new FileInputStream(mfile);
+                fis = mContext.openFileInput(mMeasurementsFilename);
                 inputStreamReader = new InputStreamReader(fis);
                 bufferedReader = new BufferedReader(inputStreamReader);
                 while ((receiveString = bufferedReader.readLine()) != null ) {
