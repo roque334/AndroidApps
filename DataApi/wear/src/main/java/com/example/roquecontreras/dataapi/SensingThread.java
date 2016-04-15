@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Environment;
 import android.util.Log;
 
 import com.example.roquecontreras.common.DSPFilter;
@@ -29,14 +28,20 @@ public class SensingThread extends Thread implements SensorEventListener {
     private volatile boolean mRunning = false;
     private Context mContext;
 
-    //AccelerometerSensor variables
     private SensorManager mSensorManager;
-    private Sensor mSensorAcceletomer;
+
+    //AccelerometerSensor variables
+    private Sensor mSensorAccelerometer;
     private boolean mIsFirstAccelerometerSensing;
+
+    //AccelerometerSensor variables
+    private Sensor mSensorGravity;
+    private boolean mIsFirstGravitySensing;
 
     //GyroscopeSensor variables
     private Sensor mSensorGyroscope;
     private boolean mIsFirstGyroscopeSensing;
+
 
     //File variables
     private FileOutputStream mMeasurementsFile;
@@ -49,9 +54,10 @@ public class SensingThread extends Thread implements SensorEventListener {
     public SensingThread(Context context){
         mContext = context;
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-        mSensorAcceletomer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mSensorGravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         mSensorGyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mIsFirstAccelerometerSensing = mIsFirstGyroscopeSensing = true;
+        mIsFirstAccelerometerSensing = mIsFirstGravitySensing = mIsFirstGyroscopeSensing = true;
         CreateMeasurementFile(System.currentTimeMillis());
     }
 
@@ -82,7 +88,8 @@ public class SensingThread extends Thread implements SensorEventListener {
     public void run() {
         mRunning = true;
         //SensorManager.SENSOR_DELAY_GAME senses every 0.02 seconds (Frecuency Sampling = 50Hz).
-        mSensorManager.registerListener(this, mSensorAcceletomer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        mSensorManager.registerListener(this, mSensorGravity, SensorManager.SENSOR_DELAY_GAME);
         mSensorManager.registerListener(this, mSensorGyroscope, SensorManager.SENSOR_DELAY_GAME);
     }
 
@@ -96,47 +103,41 @@ public class SensingThread extends Thread implements SensorEventListener {
         synchronized (this) {
             long actualTime;
             Measurement measurement;
+
             actualTime = event.timestamp;
 
-            //SendFileToHandHeld(actualTime);
-
             switch (event.sensor.getType()) {
-
-                case Sensor.TYPE_ACCELEROMETER:
-
+                case Sensor.TYPE_LINEAR_ACCELERATION:
                     if (mIsFirstAccelerometerSensing) {
-                        //DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], true);
+                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], event.sensor.getType());
                         mIsFirstAccelerometerSensing = false;
                     } else {
-                        // Raw acceleration (m/s^2)
-                        measurement = new Measurement(MeasureType.RAW_ACCELERATION,event.values[0],event.values[1],event.values[2], actualTime);
+                        measurement = new Measurement(MeasureType.RAW_ACCELERATION, event.values[0], event.values[1], event.values[2], actualTime);
                         WriteToMeasurementFile(measurement);
-
-                        /*
-                        // Total acceleration (m/s^2)
-                        measurement = new Measurement(MeasureType.TOTAL_ACCELERATION, DSPFilter.smoothingAndFiltering(event.values[0],event.values[1],event.values[2], true), actualTime);
+                        measurement = new Measurement(MeasureType.BODY_ACCELERATION, DSPFilter.smoothingAndFiltering(event.values[0], event.values[1], event.values[2], event.sensor.getType()), actualTime);
                         WriteToMeasurementFile(measurement);
-
-                        // Body acceleration (m/s^2)
-                        measurement = new Measurement(MeasureType.BODY_ACCELERATION, DSPFilter.gravitylFiltering(measurement.getX(), measurement.getY(), measurement.getZ()), actualTime);
+                    }
+                    break;
+                case Sensor.TYPE_GRAVITY:
+                    if (mIsFirstGravitySensing) {
+                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], event.sensor.getType());
+                        mIsFirstGravitySensing = false;
+                    } else {
+                        measurement = new Measurement(MeasureType.RAW_GRAVITY, event.values[0], event.values[1], event.values[2], actualTime);
                         WriteToMeasurementFile(measurement);
-                        */
+                        measurement = new Measurement(MeasureType.GRAVITY, DSPFilter.smoothingAndFiltering(event.values[0], event.values[1], event.values[2], event.sensor.getType()), actualTime);
+                        WriteToMeasurementFile(measurement);
                     }
                     break;
                 case Sensor.TYPE_GYROSCOPE:
                     if (mIsFirstGyroscopeSensing) {
-                        //DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], false);
+                        DSPFilter.initFilter(event.values[0],event.values[1],event.values[2], event.sensor.getType());
                         mIsFirstGyroscopeSensing = false;
                     } else {
-                        // Raw Angular speed (rad/s)
                         measurement = new Measurement(MeasureType.RAW_ANGULAR_SPEED, event.values[0], event.values[1], event.values[2], actualTime);
                         WriteToMeasurementFile(measurement);
-
-                        /*
-                        // Angular speed (rad/s)
-                        measurement = new Measurement(MeasureType.ANGULAR_SPEED, DSPFilter.gyroscopeFiltering(event.values[0], event.values[1], event.values[2]), actualTime);
+                        measurement = new Measurement(MeasureType.ANGULAR_SPEED, DSPFilter.smoothingAndFiltering(event.values[0], event.values[1], event.values[2], event.sensor.getType()), actualTime);
                         WriteToMeasurementFile(measurement);
-                        */
                     }
                     break;
             }
@@ -158,17 +159,9 @@ public class SensingThread extends Thread implements SensorEventListener {
         try {
             mFileTimeStamp = actualTime;
             mFilename = MobileWearConstants.MEASUREMENT_FILENAME_START + mFileTimeStamp;
-            sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-            dir = new File(sdcard.getAbsolutePath()+ "/Moreno/");
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            file = new File(dir, mFilename);
-            if (file.exists()) {
-                file.delete();
-            }
-            mMeasurementsFile = new FileOutputStream(file);
+            mMeasurementsFile = mContext.openFileOutput(mFilename, Context.MODE_PRIVATE);
         } catch (FileNotFoundException e) {
+            Log.d(LOG_TAG, "File not found");
         }
     }
 
@@ -188,7 +181,11 @@ public class SensingThread extends Thread implements SensorEventListener {
      */
     private void WriteToMeasurementFile(Measurement measurement) {
         try {
-            mMeasurementsFile.write(measurement.toString().getBytes());
+            if (mMeasurementsFile != null) {
+                mMeasurementsFile.write(measurement.toString().getBytes());
+            } else {
+                Log.d(LOG_TAG, "mMeasurementsFile == null");
+            }
         } catch (IOException e) {
         }
     }
