@@ -1,13 +1,17 @@
 package com.example.roquecontreras.dataapi;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -40,8 +44,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static com.example.roquecontreras.common.MeasureType.TOTAL_ACCELERATION;
-
 /**
  * Created by Roque Contreras on 27/10/2015.
  */
@@ -49,6 +51,7 @@ public class WearableService extends WearableListenerService {
 
     private static final String LOG_TAG = "WearableListenerService";
     private Map<String,String> mArrange;
+    private int mSync = 0;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -70,6 +73,9 @@ public class WearableService extends WearableListenerService {
         ExecutorService es;
         InitializeGoogleApiClient();
         readArrangementFile();
+        if (mSync >= 5) {
+            mSync = 0;
+        }
         if (MobileWearConstants.SEND_BY_CHANNEL_PATH.equals(channel.getPath())) {
             WaitGoogleApiClientConnection();
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
@@ -83,22 +89,39 @@ public class WearableService extends WearableListenerService {
                 threadResult = es.submit(callable);
                 es.shutdown();
                 try {
+                    mSync++;
                     if (threadResult.get().booleanValue()) {
                         runOnUiThread(new Runnable() {
                             public void run() {
-                                Toast.makeText(getApplicationContext(), String.format(WearableService.this.getString(R.string.data_sent)
-                                        , MobileWearConstants.bodyPartToText(WearableService.this, mArrange.get(channel.getNodeId())).toLowerCase())
-                                        , Toast.LENGTH_SHORT)
-                                        .show();
+                                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(WearableService.this);
+                                if (sp.getBoolean(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_NOTIFICATION, true)) {
+                                    NotificationCompat.Builder mBuilder =
+                                            (NotificationCompat.Builder) new NotificationCompat.Builder(WearableService.this)
+                                                    .setSmallIcon(R.drawable.sensing)
+                                                    .setContentTitle(WearableService.this.getString(R.string.handheld_wear_sync))
+                                                    .setContentText(String.format(WearableService.this.getString(R.string.data_sent), MobileWearConstants.bodyPartToText(WearableService.this, mArrange.get(channel.getNodeId())).toLowerCase()))
+                                                    .setPriority(NotificationCompat.PRIORITY_LOW);
+                                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                                    mNotificationManager.notify(mSync, mBuilder.build());
+                                }
                             }
                         });
                     } else {
                         runOnUiThread(new Runnable() {
                             public void run() {
-                                Toast.makeText(getApplicationContext()
-                                        , String.format(WearableService.this.getString(R.string.data_not_sent), MobileWearConstants.bodyPartToText(WearableService.this, mArrange.get(channel.getNodeId())).toLowerCase())
-                                        , Toast.LENGTH_SHORT)
-                                        .show();
+                                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(WearableService.this);
+                                if (sp.getBoolean(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_NOTIFICATION, true)) {
+                                    NotificationCompat.Builder mBuilder =
+                                            (NotificationCompat.Builder) new NotificationCompat.Builder(WearableService.this)
+                                                    .setSmallIcon(R.drawable.sensing)
+                                                    .setContentTitle(WearableService.this.getString(R.string.handheld_wear_sync))
+                                                    .setContentText(
+                                                            String.format(WearableService.this.getString(R.string.data_not_sent), MobileWearConstants.bodyPartToText(WearableService.this, mArrange.get(channel.getNodeId())).toLowerCase()))
+                                                    .setPriority(NotificationCompat.PRIORITY_LOW);
+                                    NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                    mNotificationManager.notify(mSync, mBuilder.build());
+                                }
                             }
                         });
                     }
@@ -168,12 +191,14 @@ public class WearableService extends WearableListenerService {
             is = getInputStreamResult.getInputStream();
             try {
                 while( (c = is.read(bytes)) != -1){
-                    data = data + new String(bytes,0,c);
+                    data = new String(bytes,0,c);
+                    Log.d(LOG_TAG,data);
+                    data = aux + data;
                     size += data.length();
                     aux = ParseDataAndSave(fos, data);
 
                 }
-                Log.d(LOG_TAG, channel.getNodeId() + ": " + new Integer(size).toString());
+                //Log.d(LOG_TAG, channel.getNodeId() + ": " + new Integer(size).toString());
                 is.close();
                 CloseMeasurementFile(fos);
                 result = true;
@@ -206,7 +231,7 @@ public class WearableService extends WearableListenerService {
             if ((i == (measures.length - 1)) && flag) {
                 result = measure;
             } else {
-                WriteToStringFile(fos,measure + System.lineSeparator());
+                WriteStringToFile(fos,measure + System.lineSeparator());
             }
         }
         return result;
@@ -301,7 +326,7 @@ public class WearableService extends WearableListenerService {
      * @param measurementFile the measurement stream.
      * @param measurement the accelerometer measurement.
      */
-    private void WriteToStringFile(FileOutputStream measurementFile, String measurement) {
+    private void WriteStringToFile(FileOutputStream measurementFile, String measurement) {
         try {
             measurementFile.write(measurement.getBytes());
         } catch (IOException e) {
