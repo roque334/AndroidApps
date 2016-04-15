@@ -68,6 +68,6 @@ public class Measurement {
 
     @Override
     public String toString() {
-        return type.toString() + ";" + x + ";" + y + ";" + z + ";" + timestamp + "#" + System.lineSeparator();
+        return type.toString() + "," + x + "," + y + "," + z + "," + timestamp + "#" + System.lineSeparator();
     }
 }
