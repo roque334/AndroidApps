@@ -1,6 +1,7 @@
 package com.example.roquecontreras.common;
 
 import android.content.Context;
+import android.util.Log;
 
 /**
  * Created by Roque Contreras on 16/10/2015.
@@ -9,10 +10,12 @@ public class MobileWearConstants {
 
         //PATHS
         public static final String ARRANGE_SENSORS_BY_MESSAGE_PATH = "/arrange-sensors-message";
-        public static final String START_ACCLEROMETER_BY_MESSAGE_PATH = "/start-accelerometer-message-service";
-        public static final String STOP_ACCLEROMETER_BY_MESSAGE_PATH = "/stop-accelerometer-message-service";
-        public static final String START_ACCLEROMETER_BY_DATAITEM_PATH = "/start-accelerometer-dataitem-service";
-        public static final String STOP_ACCLEROMETER_BY_DATAITEM_PATH = "/stop-accelerometer-dataitem-service";
+        public static final String START_ACCELEROMETER_BY_MESSAGE_PATH = "/start-accelerometer-message-service";
+        public static final String STOP_ACCELEROMETER_BY_MESSAGE_PATH = "/stop-accelerometer-message-service";
+        public static final String START_ACCELEROMETER_BY_DATAITEM_PATH = "/start-accelerometer-dataitem-service";
+        public static final String STOP_ACCELEROMETER_BY_DATAITEM_PATH = "/stop-accelerometer-dataitem-service";
+        public static final String START_SYNC_WEAR_BY_MESSAGE_PATH = "/start-sync-wear-message-service";
+        public static final String START_DEL_WEAR_BY_MESSAGE_PATH = "/start-del-wear-message-service";
         public static final String SEND_BY_CHANNEL_PATH = "/send-by-channel";
 
         //CAPABILITIES
@@ -51,8 +54,14 @@ public class MobileWearConstants {
         //MEASUREMENT FILE
         public static final String MEASUREMENT_FILENAME_START = "measurements_";
 
+        /**
+         * @param context  the context of the application.
+         * @param bodyPart the message with body part.
+         * @return the body part readable by a human.
+         */
         public static String bodyPartToText(Context context, String bodyPart) {
                 String result = "";
+                Log.d("BodyPartToText", bodyPart);
                 switch (bodyPart) {
                         case MobileWearConstants.LARM_MESSAGE:
                                 result = context.getString(R.string.left_arm);

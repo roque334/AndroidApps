@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="MorenoTheme" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+    <style name="MorenoTheme" parent="android:Theme.DeviceDefault.Light">
         <item name="android:windowBackground">@drawable/background</item>
     </style>
 

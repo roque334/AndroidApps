@@ -34,6 +34,4 @@ public class SettingsActivity extends Activity {
         super.onPause();
         unregisterReceiver(mNetworkChangeReceiver);
     }
-
-
 }

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
 
 import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.wearable.DataEvent;
@@ -30,6 +29,7 @@ public class WearableService extends WearableListenerService {
     /**
      * Execute the proper actions in accordance of the message path.
      * The dataitem received can starts or stops the accelerometer service.
+     *
      * @param dataEvents the dataitems received.
      */
     @Override
@@ -38,10 +38,10 @@ public class WearableService extends WearableListenerService {
         Notification notification;
         NotificationManagerCompat notificationManagerCompat;
         Intent intent;
-        for(DataEvent dataEvent: dataEvents) {
+        for (DataEvent dataEvent : dataEvents) {
             if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
                 switch (dataEvent.getDataItem().getUri().getPath()) {
-                    case MobileWearConstants.START_ACCLEROMETER_BY_DATAITEM_PATH:
+                    case MobileWearConstants.START_ACCELEROMETER_BY_DATAITEM_PATH:
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
                                 .setContentTitle("Accelerometer Services")
@@ -57,7 +57,7 @@ public class WearableService extends WearableListenerService {
                         intent.putExtra(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, dataMap.getLong(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL));
                         startService(intent);
                         break;
-                    case MobileWearConstants.STOP_ACCLEROMETER_BY_DATAITEM_PATH:
+                    case MobileWearConstants.STOP_ACCELEROMETER_BY_DATAITEM_PATH:
                         builder = new NotificationCompat.Builder(this)
                                 .setSmallIcon(R.drawable.ic_launcher)
                                 .setContentTitle("Accelerometer Services")
@@ -78,6 +78,7 @@ public class WearableService extends WearableListenerService {
      * Execute the proper actions in accordance of the message path.
      * The message received can arranges the sensors over the patients body and creates a
      * notification with its wearing instructions.
+     *
      * @param messageEvent the message received.
      */
     @Override
@@ -86,6 +87,8 @@ public class WearableService extends WearableListenerService {
         NotificationCompat.Builder builder;
         Notification notification;
         NotificationManagerCompat notificationManagerCompat;
+        FileSynchronization fileSynchronization;
+        FileManager fileManager;
         Intent intent;
         String message;
         switch (messageEvent.getPath()) {
@@ -102,7 +105,7 @@ public class WearableService extends WearableListenerService {
                 notificationManagerCompat = NotificationManagerCompat.from(this);
                 notificationManagerCompat.notify(1, notification);
                 break;
-            case MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH:
+            case MobileWearConstants.START_ACCELEROMETER_BY_MESSAGE_PATH:
                 message = new String(messageEvent.getData());
                 builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -116,7 +119,7 @@ public class WearableService extends WearableListenerService {
                 intent = new Intent(this, SensorService.class);
                 startService(intent);
                 break;
-            case MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH:
+            case MobileWearConstants.STOP_ACCELEROMETER_BY_MESSAGE_PATH:
                 message = new String(messageEvent.getData());
                 builder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
@@ -127,6 +130,33 @@ public class WearableService extends WearableListenerService {
                 notificationManagerCompat = NotificationManagerCompat.from(this);
                 notificationManagerCompat.notify(3, notification);
                 stopService(new Intent(this, SensorService.class));
+                break;
+
+            case MobileWearConstants.START_SYNC_WEAR_BY_MESSAGE_PATH:
+                message = new String(messageEvent.getData());
+                builder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle(WearableService.this.getString(R.string.sync_title))
+                        .setContentText(WearableService.this.getString(R.string.sync_text));
+                notification = builder.build();
+
+                notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat.notify(4, notification);
+                fileSynchronization = new FileSynchronization(getApplicationContext());
+                fileSynchronization.start();
+                break;
+            case MobileWearConstants.START_DEL_WEAR_BY_MESSAGE_PATH:
+                message = new String(messageEvent.getData());
+                builder = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_launcher)
+                        .setContentTitle(WearableService.this.getString(R.string.del_title))
+                        .setContentText(WearableService.this.getString(R.string.del_text));
+                notification = builder.build();
+
+                notificationManagerCompat = NotificationManagerCompat.from(this);
+                notificationManagerCompat.notify(5, notification);
+                fileManager = new FileManager(getApplicationContext());
+                fileManager.start();
             default:
                 break;
         }
@@ -134,6 +164,7 @@ public class WearableService extends WearableListenerService {
 
     /**
      * Sets the background image of the notification builder in accordance of a message.
+     *
      * @param builder the notification builder to set the background image.
      * @param message the message that determines the image to be set.
      */

@@ -3,8 +3,8 @@ package com.example.roquecontreras.dataapi;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.example.roquecontreras.common.MobileWearConstants;
 import com.google.android.gms.common.ConnectionResult;
@@ -13,7 +13,7 @@ import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Wearable;
 
-import java.util.concurrent.TimeUnit;
+import java.io.File;
 
 public class SensorService extends Service {
 
@@ -47,18 +47,28 @@ public class SensorService extends Service {
     @Override
     public void onDestroy() {
         String filename;
-        SendByChannelThread sendByChannelThread;
+        File sdcard, dir;
+        FileSynchronization fileSynchronization;
         if (mSensingThread != null && mSensingThread.isRunning()) {
-
             filename = mSensingThread.Terminate();
             try {
                 mSensingThread.join();
             } catch (InterruptedException e) {
             }
-            sendByChannelThread = new SendByChannelThread(getApplicationContext(), filename, mGoogleApiClient);
-            sendByChannelThread.start();
+            sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+            dir = new File(sdcard.getAbsolutePath() + "/Moreno/");
+            fileSynchronization = new FileSynchronization(getApplicationContext(), mGoogleApiClient);
+            fileSynchronization.setFile(new File(dir, filename));
+            fileSynchronization.start();
+            while (fileSynchronization.isRunning()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             try {
-                sendByChannelThread.join();
+                fileSynchronization.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -91,5 +101,4 @@ public class SensorService extends Service {
                 .build();
         Wearable.CapabilityApi.addCapabilityListener(mGoogleApiClient, mCapabilityListener, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY);
     }
-
 }

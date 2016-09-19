@@ -10,4 +10,8 @@
     <string name="start_stop_title">Sensing Services</string>
     <string name="start_text">Started.</string>
     <string name="stop_text">Stopped.</string>
+    <string name="sync_title">Synchronization</string>
+    <string name="sync_text">Started.</string>
+    <string name="del_title">Delete data</string>
+    <string name="del_text">Started.</string>
 </resources>

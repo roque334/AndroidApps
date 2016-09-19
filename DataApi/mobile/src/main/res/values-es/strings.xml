@@ -36,6 +36,11 @@
     <string name="sync_interval_title">Frecuencia de sincronización</string>
     <string name="sync_interval_summary">Cada %1$s hora(s)</string>
 
+    <string name="info">Información</string>
+    <string name="about_app">Acerca de la App</string>
+    <string name="info_moreno">Aplicación desarrollada por el Grupo de Investigación en
+        Telecomunicaciones y Telemática de la Universidad Politécnica Salesiana.</string>
+
     <!--Dialogs-->
     <string name="no_internet_connection_title">Por favor espere</string>
     <string name="no_internet_connection_message">Conectando...</string>
@@ -53,12 +58,22 @@
     <string name="impossible_sing_in_2">Imposible iniciar sesión</string>
     <string name="devices_not_connected">No se detectaron dispositivos wear</string>
     <string name="devices_not_set">Crea una configuración de sensores</string>
-    <string name="data_sent">Datos recibidos: %1$s</string>
-    <string name="data_not_sent">Error de sincronización: %1$s</string>
+    <string name="data_sent">Datos recibidos</string>
+    <string name="data_not_sent">Error de sincronización</string>
 
     <!--Others-->
     <string name="arrangement_status">Colocados</string>
     <string name="sensing_status">Sensando</string>
     <string name="on_label">ON</string>
     <string name="off_label">OFF</string>
+
+    <string name="action_sync_wear">Sincronizar</string>
+    <string name="action_del_wear">Eliminar datos</string>
+
+    <string name="title_activity_information">Acerca de la App</string>
+    <string name="project">Proyecto MORENO</string>
+    <string name="resolution">Resolución N°: 491-010-2015-06-10</string>
+    <string name="department">Carrera de Ingeniería Electrónica</string>
+    <string name="app_description">Aplicación desarrollada por el Grupo de Investigación en Telecomunicaciones y Telemática de la Universidad Politécnica Salesiana.</string>
+
 </resources>

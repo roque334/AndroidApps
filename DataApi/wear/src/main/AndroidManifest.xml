@@ -31,6 +31,9 @@
             android:enabled="true"
             android:exported="true" >
             <intent-filter>
+                <action android:name="com.google.android.gms.wearable.CHANNEL_EVENT" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
             </intent-filter>
             <intent-filter>

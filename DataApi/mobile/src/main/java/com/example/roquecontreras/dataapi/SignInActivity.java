@@ -8,7 +8,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.IntentCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -85,7 +84,6 @@ public class SignInActivity extends FragmentActivity implements
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         GoogleSignInResult result;
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleSignInResult(result);
@@ -113,6 +111,7 @@ public class SignInActivity extends FragmentActivity implements
 
     /**
      * Sends the idtoken, given by the google authenticator, to the app server.
+     *
      * @param idToken the token given by the google authenticator
      */
     private void sendTokenToServerToValidate(final String idToken) {
@@ -120,7 +119,10 @@ public class SignInActivity extends FragmentActivity implements
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(WebServerConstants.ID_TOKEN_LABEL, idToken);
 
-        jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+        //Uncomment the following line if you want to validate the user in the proprietary server
+        //jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.LOCAL_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
+        //Uncomment the following line if you want to validate the user in the heroku proprietary server
+        jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, WebServerConstants.HEROKU_WEB_SERVER_VALIDATE_TOKEN_URL, new JSONObject(params)
                 , new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -128,9 +130,9 @@ public class SignInActivity extends FragmentActivity implements
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | IntentCompat.FLAG_ACTIVITY_CLEAR_TASK);
                 intent.putExtra(WebServerConstants.ID_TOKEN_LABEL, idToken);
                 SignInActivity.this.getApplicationContext().startActivity(intent);
-                //finish();
             }
-        }, new Response.ErrorListener() { //Create an error listener to handle errors appropriately.
+        }, new Response.ErrorListener() {
+            //Create an error listener to handle errors appropriately.
             @Override
             public void onErrorResponse(VolleyError error) {
                 //This code is executed if there is an error.
@@ -164,8 +166,9 @@ public class SignInActivity extends FragmentActivity implements
 
     /**
      * Sets the text in the google plus button.
+     *
      * @param signInButton the google plus button.
-     * @param buttonText the text to be set.
+     * @param buttonText   the text to be set.
      */
     protected void setGooglePlusButtonText(SignInButton signInButton,
                                            String buttonText) {
@@ -184,13 +187,20 @@ public class SignInActivity extends FragmentActivity implements
         }
     }
 
-    public boolean isInternetConnectionOn(){
+    /**
+     * Checks whether the device is connected to internet or not.
+     *
+     * @return true if the device is connected to internet;
+     * false if the device is not connected to internet.
+     */
+    public boolean isInternetConnectionOn() {
         ConnectivityManager connectivityManager;
         NetworkInfo activeNetworkInfo;
         boolean result = true;
         connectivityManager = (ConnectivityManager) SignInActivity.this.getSystemService(Context.CONNECTIVITY_SERVICE);
         activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) { // connected to the internet
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+            // connected to the internet
             if (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
                 // connected to wifi
             } else if (activeNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {

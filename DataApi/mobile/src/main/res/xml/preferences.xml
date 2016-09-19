@@ -26,15 +26,6 @@
             android:key="pref_key_handheld_wear_sync_wifi"
             android:title="@string/sync_wifi_title"
             android:defaultValue="true"/>
-        <!--
-        <com.example.roquecontreras.dataapi.NumberPickerPreference
-            android:key="pref_key_handheld_wear_sync_interval"
-            android:title="@string/sync_interval_title"
-            android:summary="@string/sync_interval_summary"
-            android:defaultValue="@integer/sync_interval_defaultValue"
-            android:max="@integer/sync_interval_maxValue"
-            custom:min="@integer/sync_interval_minValue"/>
-        -->
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -48,16 +39,16 @@
             android:key="pref_key_handheld_server_sync_wifi"
             android:title="@string/sync_wifi_title"
             android:defaultValue="true"/>
-        <!--
-        <com.example.roquecontreras.dataapi.NumberPickerPreference
-            android:key="pref_key_handheld_server_sync_interval"
-            android:title="@string/sync_interval_title"
-            android:summary="@string/sync_interval_summary"
-            android:defaultValue="@integer/sync_interval_defaultValue"
-            android:max="@integer/sync_interval_maxValue"
-            custom:min="@integer/sync_interval_minValue"/>
-        -->
+    </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/info"
+        android:key="pref_about">
+        <Preference android:title="@string/about_app" >
+            <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="com.example.roquecontreras.dataapi"
+                android:targetClass="com.example.roquecontreras.dataapi.InformationActivity" />
+        </Preference>
     </PreferenceCategory>
 
 </PreferenceScreen>

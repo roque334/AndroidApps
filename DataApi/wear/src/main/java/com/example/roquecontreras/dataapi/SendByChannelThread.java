@@ -1,46 +1,31 @@
 package com.example.roquecontreras.dataapi;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.example.roquecontreras.common.MobileWearConstants;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.Result;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.wearable.CapabilityApi;
-import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Wearable;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by roquecontreras on 26/10/15.
  */
-public class SendByChannelThread extends Thread implements ChannelApi.ChannelListener, ResultCallback<Channel.GetOutputStreamResult>{
+public class SendByChannelThread extends Thread implements ChannelApi.ChannelListener {
 
-    private final String LOG_TAG="SendByChannelThread";
+    private final String LOG_TAG = "SendByChannelThread";
 
     //Thread variables
     private Context mContext;
-    private volatile boolean mIsSucces = false;
+    private volatile boolean mIsSuccess = false;
+    private volatile boolean mRunning = false;
     private File mfile;
     private String mMeasurementsFilename;
 
@@ -52,23 +37,37 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
         mContext = context;
         mMeasurementsFilename = measurements;
         mGoogleApiClient = googleApiClient;
+        mGoogleApiClient.connect();
     }
 
-    public boolean isSucces() {
-        return mIsSucces;
+    public boolean isSuccess() {
+        return mIsSuccess;
+    }
+
+    /**
+     * Return weather the thread is running or not.
+     *
+     * @return True if the thread is currently running; otherwise False.
+     */
+    public boolean isRunning() {
+        return mRunning;
     }
 
     @Override
     public void run() {
-        mIsSucces = false;
+        mIsSuccess = false;
+        mRunning = true;
 
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             mNodeID = GetHandheldNodeID();
             if (!mNodeID.isEmpty()) {
-                mIsSucces = SendFile();
+                mIsSuccess = SendFile();
             }
         }
-        if (mIsSucces) {
+        if (mIsSuccess) {
+            Thread.currentThread().interrupt();
+            return;
+        } else {
             Thread.currentThread().interrupt();
             return;
         }
@@ -76,9 +75,10 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
 
     /**
      * Returns the id of handheld node.
+     *
      * @return the id of the handheld node.
      */
-    private String GetHandheldNodeID(){
+    private String GetHandheldNodeID() {
         CapabilityApi.GetCapabilityResult capabilityResult;
         String result = "";
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
@@ -94,18 +94,33 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
 
     /**
      * Sends the measurement file to the handheld node.
+     *
      * @return True if the file was send correctly; otherwise False.
      */
-    private boolean SendFile(){
+    private boolean SendFile() {
         File sdcard, dir;
         ChannelApi.OpenChannelResult channelResult;
         Status statusPendingResult;
+        boolean isChannelOpenned;
         final boolean[] result = {false};
+        isChannelOpenned = false;
+        channelResult = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
-            if (channelResult.getStatus().isSuccess()) {
+            while (!(isChannelOpenned)) {
+                channelResult = Wearable.ChannelApi.openChannel(mGoogleApiClient, mNodeID, MobileWearConstants.SEND_BY_CHANNEL_PATH).await();
+                isChannelOpenned = channelResult.getStatus().isSuccess();
+            }
+            if ((channelResult != null) && (isChannelOpenned)) {
                 mChannel = channelResult.getChannel();
-                mChannel.getOutputStream(mGoogleApiClient).setResultCallback(this);
+                sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+                dir = new File(sdcard.getAbsolutePath() + "/Moreno/");
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                mfile = new File(dir, mMeasurementsFilename);
+                statusPendingResult = mChannel.sendFile(mGoogleApiClient, Uri.fromFile(mfile)).await();
+                mIsSuccess = statusPendingResult.isSuccess();
+                mRunning = false;
             } else {
                 Toast.makeText(mContext, mContext.getString(R.string.send_error), Toast.LENGTH_SHORT).show();
             }
@@ -115,11 +130,12 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
 
     @Override
     public void onChannelOpened(Channel channel) {
+        // Log.d(LOG_TAG, "onChannelOpened");
     }
 
     @Override
     public void onChannelClosed(Channel channel, int closeReason, int appSpecificErrorCode) {
-        switch (closeReason) {
+        /*switch (closeReason) {
             case CLOSE_REASON_NORMAL:
                 Log.d(LOG_TAG, "onChannelClosed: Channel closed. Reason: normal close (" + closeReason + ") Error code: " + appSpecificErrorCode + "\n" +
                         "From Node ID" + channel.getNodeId() + "\n" +
@@ -140,13 +156,12 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
                         "From Node ID" + channel.getNodeId() + "\n" +
                         "Path: " + channel.getPath());
                 break;
-        }
-
+        }*/
     }
 
     @Override
     public void onInputClosed(Channel channel, int closeReason, int appSpecificErrorCode) {
-        switch (closeReason) {
+        /*switch (closeReason) {
             case CLOSE_REASON_NORMAL:
                 Log.d(LOG_TAG, "onInputClosed: Channel input side closed. Reason: normal close (" + closeReason + ") Error code: " + appSpecificErrorCode + "\n" +
                         "From Node ID" + channel.getNodeId() + "\n" +
@@ -166,11 +181,12 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
                 Log.d(LOG_TAG, "onInputClosed: Channel input side closed. Reason: closed locally (" + closeReason + ") Error code: " + appSpecificErrorCode + "\n" +
                         "From Node ID" + channel.getNodeId() + "\n" +
                         "Path: " + channel.getPath());
-        }
+        }*/
     }
 
     @Override
     public void onOutputClosed(Channel channel, int closeReason, int appSpecificErrorCode) {
+        /*Log.d(LOG_TAG, "onOutputClosed");
         switch (closeReason) {
             case CLOSE_REASON_NORMAL:
                 Log.d(LOG_TAG, "onOutputClosed: Channel output side closed. Reason: normal close (" + closeReason + ") Error code: " + appSpecificErrorCode + "\n" +
@@ -192,36 +208,6 @@ public class SendByChannelThread extends Thread implements ChannelApi.ChannelLis
                         "From Node ID" + channel.getNodeId() + "\n" +
                         "Path: " + channel.getPath());
                 break;
-        }
-    }
-
-    @Override
-    public void onResult(Channel.GetOutputStreamResult getOutputStreamResult) {
-        FileInputStream fis;
-        InputStreamReader inputStreamReader;
-        BufferedReader bufferedReader;
-        String receiveString;
-        int total;
-        boolean result = false;
-        OutputStream os;
-        result = getOutputStreamResult.getStatus().isSuccess();
-        total = 0;
-        if (result) {
-            os = getOutputStreamResult.getOutputStream();
-            try {
-
-                fis = mContext.openFileInput(mMeasurementsFilename);
-                inputStreamReader = new InputStreamReader(fis);
-                bufferedReader = new BufferedReader(inputStreamReader);
-                while ((receiveString = bufferedReader.readLine()) != null ) {
-                    total += receiveString.length();
-                    os.write(receiveString.getBytes());
-                    os.flush();
-                }
-                os.close();
-            } catch (IOException e) {
-            }
-        } else {
-        }
+        }*/
     }
 }

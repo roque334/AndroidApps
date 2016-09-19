@@ -35,6 +35,9 @@
     <string name="sync_interval_title">Sync interval</string>
     <string name="sync_interval_summary">Every %1$s hour(s)</string>
 
+    <string name="info">Information</string>
+    <string name="about_app">About the App</string>
+
     <!--Dialogs-->
     <string name="no_internet_connection_title">Please wait</string>
     <string name="no_internet_connection_message">Connecting...</string>
@@ -52,13 +55,25 @@
     <string name="impossible_sing_in_2">Impossible to sign in</string>
     <string name="devices_not_connected">No wear devices detected</string>
     <string name="devices_not_set">Set the sensors in your body</string>
-    <string name="data_sent">Data received: %1$s</string>
-    <string name="data_not_sent">Synchronization error: %1$s</string>
+    <string name="data_sent">Data received</string>
+    <string name="data_not_sent">Synchronization error</string>
+    <!--string name="data_sent">Data received: %1$s</string-->
+    <!--string name="data_not_sent">Synchronization error: %1$s</string-->
 
     <!--Others-->
     <string name="arrangement_status">Wearing</string>
     <string name="sensing_status">Sensing</string>
     <string name="on_label">ON</string>
     <string name="off_label">OFF</string>
+
+    <string name="action_sync_wear">Synchronize</string>
+    <string name="action_del_wear">Delete data</string>
+
+    <string name="title_activity_information">About the App</string>
+    <string name="project">MORENO Project</string>
+    <string name="resolution">Resolution N°: 491-010-2015-06-10</string>
+    <string name="department">Electronic Engineering Department</string>
+    <string name="app_description">Application developed by the Telecommunications and Telematics Research Group of the Politecnica Salesiana University.</string>
+
 
 </resources>

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -55,6 +54,7 @@ public class ArrangeSensorsActivity extends Activity {
                     @Override
                     public void onConnected(Bundle connectionHint) {
                     }
+
                     @Override
                     public void onConnectionSuspended(int cause) {
                     }
@@ -103,9 +103,10 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Saves the sensor arrangement to long persistent file
+     *
      * @param arrange the sensor arrangement
      */
-    private void savesSensorArrangement(Map<String, String>  arrange) {
+    private void savesSensorArrangement(Map<String, String> arrange) {
         String line;
         FileOutputStream fos = null;
         try {
@@ -153,22 +154,23 @@ public class ArrangeSensorsActivity extends Activity {
     /**
      * Sets the proper image to a layout ImageView in accordance of the id of a view
      * and its checked status. Then updates the number of available sensors. Finally,
-     * unabled the layout checkboxes with false checked status if that number is equal
+     * updates the layout checkboxes with false checked status if that number is equal
      * to zero; otherwise, enables the checkboxes with false checked status.
+     *
      * @param view
      */
     public void onCheckboxClicked(View view) {
         int viewID;
         boolean isChecked;
         CheckBox checkBox = (CheckBox) view;
-        isChecked =  checkBox.isChecked();
+        isChecked = checkBox.isChecked();
         viewID = view.getId();
         setImageToImageView(viewID, isChecked);
         if (mNumberWearablesAvailables == 0) {
-            setEnabledStatusToCheckBoxes(getCheckBoxesByStatus(false),false);
-        }else {
+            setEnabledStatusToCheckBoxes(getCheckBoxesByStatus(false), false);
+        } else {
             if (mNumberWearablesAvailables == 1) {
-                setEnabledStatusToCheckBoxes(getCheckBoxesByStatus(false),true);
+                setEnabledStatusToCheckBoxes(getCheckBoxesByStatus(false), true);
             }
         }
         mAvailableSensors.setText(new Integer(mNumberWearablesAvailables).toString());
@@ -177,10 +179,11 @@ public class ArrangeSensorsActivity extends Activity {
     /**
      * Sets the proper image to a layout ImageView in accordance of the id of a view
      * and its checked status. Then updates the number of available sensors.
-     * @param viewID the id of a view.
+     *
+     * @param viewID    the id of a view.
      * @param isChecked the checked status of a view with the previous id,
      */
-    private void setImageToImageView(int viewID, boolean isChecked){
+    private void setImageToImageView(int viewID, boolean isChecked) {
         setImage(viewID, isChecked);
         if (isChecked) {
             mNumberWearablesAvailables -= 1;
@@ -193,36 +196,37 @@ public class ArrangeSensorsActivity extends Activity {
     /**
      * Sets the proper image to a layout ImageView in accordance of the id of a view
      * and its checked status.
-     * @param viewID the id of a view.
+     *
+     * @param viewID    the id of a view.
      * @param isChecked the checked status of a view with the previous id,
      */
     private void setImage(int viewID, boolean isChecked) {
-        switch(viewID) {
+        switch (viewID) {
             case R.id.left_arm_checkbox:
                 if (isChecked) {
                     mBodyLeftArm.setImageResource(R.drawable.body_left_arm);
-                }else {
+                } else {
                     mBodyLeftArm.setImageResource(R.drawable.body_left_arm_none);
                 }
                 break;
             case R.id.right_arm_checkbox:
                 if (isChecked) {
                     mBodyRightArm.setImageResource(R.drawable.body_right_arm);
-                }else {
+                } else {
                     mBodyRightArm.setImageResource(R.drawable.body_right_arm_none);
                 }
                 break;
             case R.id.left_leg_checkbox:
                 if (isChecked) {
                     mBodyLeftLeg.setImageResource(R.drawable.body_left_leg);
-                }else {
+                } else {
                     mBodyLeftLeg.setImageResource(R.drawable.body_left_leg_none);
                 }
                 break;
             case R.id.right_leg_checkbox:
                 if (isChecked) {
                     mBodyRightLeg.setImageResource(R.drawable.body_right_leg);
-                }else {
+                } else {
                     mBodyRightLeg.setImageResource(R.drawable.body_right_leg_none);
                 }
             default:
@@ -232,6 +236,7 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Gets and load bundles data of the current intent.
+     *
      * @param currentIntent the current intend.
      */
     private void loadExtras(Intent currentIntent) {
@@ -242,9 +247,10 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Returns a list with all the layout checkboxes.
+     *
      * @return the list with all the layout checkboxes.
      */
-    private ArrayList<CheckBox> getCheckBoxes(){
+    private ArrayList<CheckBox> getCheckBoxes() {
         ArrayList<CheckBox> checkBoxes = new ArrayList<CheckBox>();
         checkBoxes.add((CheckBox) this.findViewById(R.id.left_arm_checkbox));
         checkBoxes.add((CheckBox) this.findViewById(R.id.right_arm_checkbox));
@@ -255,6 +261,7 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Returns a checkbox list that have the checked attribute asked.
+     *
      * @param checkStatus the checked status asked for.
      * @return the list of checkboxes that have the corresponding checked attribute.
      */
@@ -262,8 +269,8 @@ public class ArrangeSensorsActivity extends Activity {
         ArrayList<CheckBox> checkBoxes, result;
         result = new ArrayList<>();
         checkBoxes = getCheckBoxes();
-        for(CheckBox item : checkBoxes) {
-            if (item.isChecked() == checkStatus){
+        for (CheckBox item : checkBoxes) {
+            if (item.isChecked() == checkStatus) {
                 result.add(item);
             }
         }
@@ -273,17 +280,19 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Sets the enabled attribute of the checkbox.
-     * @param checkBoxes the checkbox to update the enabled attribute.
+     *
+     * @param checkBoxes    the checkbox to update the enabled attribute.
      * @param enabledStatus the status to be set to the checkbox.
      */
     private void setEnabledStatusToCheckBoxes(ArrayList<CheckBox> checkBoxes, boolean enabledStatus) {
-        for(CheckBox item : checkBoxes) {
+        for (CheckBox item : checkBoxes) {
             item.setEnabled(enabledStatus);
         }
     }
 
     /**
      * Starts the thread that returns the map with every sensorID and its body part.
+     *
      * @param command the path that identifies the message.
      * @return the map with every sensorID and its body part; otherwise null.
      */
@@ -312,16 +321,17 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Returns the map with every sensorID and its body part.
+     *
      * @param command the path that identifies the message.
      * @return the map with every sensorID and its body part; otherwise null.
      */
     private Map<String, String> arrangeSensorsUsingMessages(String command) {
         String message;
         Map<String, String> result;
-        ArrayList<CheckBox> checkBoxesWithTrueStatus =  getCheckBoxesByStatus(true);
+        ArrayList<CheckBox> checkBoxesWithTrueStatus = getCheckBoxesByStatus(true);
         result = new HashMap<String, String>();
         if (mGoogleApiClient.isConnected()) {
-            for(int i = 0; i < checkBoxesWithTrueStatus.size(); i++) {
+            for (int i = 0; i < checkBoxesWithTrueStatus.size(); i++) {
                 message = getBodyPart(checkBoxesWithTrueStatus.get(i));
                 if (Wearable.MessageApi.sendMessage(mGoogleApiClient, mWearableNodesIDs[i],
                         command, message.getBytes()).await().getStatus().isSuccess()) {
@@ -339,6 +349,7 @@ public class ArrangeSensorsActivity extends Activity {
 
     /**
      * Returns the body part represented by the check box.
+     *
      * @param checkBox the checkbox passed to get its body part.
      * @return the body part string of the check box.
      */

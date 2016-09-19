@@ -29,13 +29,10 @@ public class NumberPickerPreference extends DialogPreference {
 
         // get attributes specified in XML
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.NumberPickerPreference, 0, 0);
-        try
-        {
+        try {
             mMinValue = (a.getInteger(R.styleable.NumberPickerPreference_min, DEFAULT_MIN_VALUE));
             mMaxValue = (a.getInteger(R.styleable.NumberPickerPreference_android_max, DEFAULT_MAX_VALUE));
-        }
-        finally
-        {
+        } finally {
             a.recycle();
         }
 
@@ -68,8 +65,7 @@ public class NumberPickerPreference extends DialogPreference {
     protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
         if (restorePersistedValue) {
             mValue = getPersistedInt(DEFAULT_VALUE);
-        }
-        else {
+        } else {
             mValue = (int) defaultValue;
             persistInt(mValue);
         }

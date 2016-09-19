@@ -9,7 +9,6 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,13 +48,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "PhoneActivity";
-    private Map<String,String> mArrange;
+    private Map<String, String> mArrange;
 
     private ImageButton mArrangeButton, mStartButton;
     private Switch mArrangeSwitch, mSensingSwitch;
@@ -143,6 +140,7 @@ public class MainActivity extends Activity {
 
     /**
      * Loads the values contained on the Bundle instance.
+     *
      * @param savedInstanceState the Bundle instance.
      */
     private void loadSavedInstanceState(Bundle savedInstanceState) {
@@ -150,7 +148,7 @@ public class MainActivity extends Activity {
 
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
-            if(extras == null) {
+            if (extras == null) {
                 this.mIdToken = null;
             } else {
                 this.mIdToken = extras.getString(WebServerConstants.ID_TOKEN_LABEL);
@@ -194,9 +192,10 @@ public class MainActivity extends Activity {
 
     /**
      * Starts the activity of the arrangement of the wear nodes over the patient's body.
+     *
      * @param devicesID the wear IDs currently connected.
      */
-    private void startArrangeSensorActivity (String[] devicesID) {
+    private void startArrangeSensorActivity(String[] devicesID) {
         Intent intent = new Intent(getApplicationContext(), ArrangeSensorsActivity.class);
         intent.putExtra(MobileWearConstants.WEARABLE_NODES_EXTRA, devicesID);
         startActivityForResult(intent, MobileWearConstants.RESULT_CODE_ARRANGEMENT);
@@ -208,15 +207,16 @@ public class MainActivity extends Activity {
     private void startButtonOnClick() {
         if (mArrangeSwitch.isChecked()) {
             startDialog();
-        }else {
-            Toast.makeText(getApplicationContext(), MainActivity.this.getString(R.string.devices_not_set), Toast.LENGTH_SHORT).show();;
+        } else {
+            Toast.makeText(getApplicationContext(), MainActivity.this.getString(R.string.devices_not_set), Toast.LENGTH_SHORT).show();
+            ;
         }
     }
 
     /**
      * Shows the dialog that corresponds to the current sensing state.
      */
-    private void startDialog(){
+    private void startDialog() {
         AlertDialog.Builder builder;
         final SharedPreferences.Editor editor;
         builder = new AlertDialog.Builder(MainActivity.this);
@@ -226,7 +226,7 @@ public class MainActivity extends Activity {
                     .setTitle(R.string.start_sensing_dialog_title);
             builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    mSensingSwitch.setChecked(startSendNotificationUsingMessagesThread(MobileWearConstants.START_ACCLEROMETER_BY_MESSAGE_PATH, "start"));
+                    mSensingSwitch.setChecked(startSendNotificationUsingMessagesThread(MobileWearConstants.START_ACCELEROMETER_BY_MESSAGE_PATH, "start"));
                     editor.putBoolean("isSensing", true);
                     editor.commit();
                     mArrangeButton.setEnabled(false);
@@ -242,7 +242,7 @@ public class MainActivity extends Activity {
                     .setTitle(R.string.stop_sensing_dialog_title);
             builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
-                    mSensingSwitch.setChecked(!startSendNotificationUsingMessagesThread(MobileWearConstants.STOP_ACCLEROMETER_BY_MESSAGE_PATH, "stop"));
+                    mSensingSwitch.setChecked(!startSendNotificationUsingMessagesThread(MobileWearConstants.STOP_ACCELEROMETER_BY_MESSAGE_PATH, "stop"));
                     editor.putBoolean("isSensing", false);
                     editor.commit();
                     mArrangeButton.setEnabled(true);
@@ -260,7 +260,9 @@ public class MainActivity extends Activity {
     /**
      * Executes the actions of the uploadButton onClick.
      */
-    private void uploadButtonOnClick(){
+    private void uploadButtonOnClick() {
+        //In case you want to upload the data to the server, uncomment the
+        //following lines and install the server application on a proprietary server.
         /*
         String stringPattern;
         Pattern pattern;
@@ -285,7 +287,7 @@ public class MainActivity extends Activity {
     /**
      * Executes the actions of the preferencesButton onClick.
      */
-    private void preferencesButtonOnClick(){
+    private void preferencesButtonOnClick() {
         Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
         startActivity(intent);
     }
@@ -391,6 +393,7 @@ public class MainActivity extends Activity {
 
     /**
      * Gets the SharedPreferences of the application.
+     *
      * @return the SharedPreferences of the application.
      */
     private SharedPreferences getSharedPreferences() {
@@ -435,16 +438,17 @@ public class MainActivity extends Activity {
         CapabilityApi.GetCapabilityResult capabilityResult;
         String[] result = null;
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                capabilityResult = Wearable.CapabilityApi
-                        .getCapability(mGoogleApiClient, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY
-                                , CapabilityApi.FILTER_REACHABLE).await();
-                if (capabilityResult.getStatus().isSuccess()) {
-                    if (capabilityResult.getCapability().getNodes().size() > 0) {
-                        result = setNodeToArrayString(capabilityResult.getCapability().getNodes());
-                    }
+            capabilityResult = Wearable.CapabilityApi
+                    .getCapability(mGoogleApiClient, MobileWearConstants.TREMOR_QUANTIFICATION_CAPABILITY
+                            , CapabilityApi.FILTER_REACHABLE).await();
+            if (capabilityResult.getStatus().isSuccess()) {
+                if (capabilityResult.getCapability().getNodes().size() > 0) {
+                    result = setNodeToArrayString(capabilityResult.getCapability().getNodes());
                 }
             }
+        }
+        if (result == null) {
+
         }
         return result;
     }
@@ -522,17 +526,22 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
+        switch (id) {
+            case R.id.action_sync_wear:
+                startSendNotificationUsingMessagesThread(MobileWearConstants.START_SYNC_WEAR_BY_MESSAGE_PATH, "start");
+                return true;
+            case R.id.action_del_wear:
+                startSendNotificationUsingMessagesThread(MobileWearConstants.START_DEL_WEAR_BY_MESSAGE_PATH, "start");
+                return true;
         }
+
 
         return super.onOptionsItemSelected(item);
     }
 
     /**
      * Parses a set of currently connected nodes into a string array of node's id.
+     *
      * @param wearableNodes the set of currrently connected nodes.
      * @return the array of sensors id currently connected to the WBAN
      */
@@ -540,7 +549,7 @@ public class MainActivity extends Activity {
         int i;
         String[] result = new String[wearableNodes.size()];
         i = 0;
-        for(Node node:  wearableNodes){
+        for (Node node : wearableNodes) {
             result[i] = node.getId();
             i++;
         }
@@ -549,9 +558,10 @@ public class MainActivity extends Activity {
 
     /**
      * Deals with the result of an activity started for result.
+     *
      * @param requestCode the code for a particular request
-     * @param resultCode the result code of the particular request
-     * @param data the data returned from the activity started for result
+     * @param resultCode  the result code of the particular request
+     * @param data        the data returned from the activity started for result
      */
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent data) {
@@ -563,11 +573,15 @@ public class MainActivity extends Activity {
 
     /**
      * Sends a file to the app server with a multipart request.
+     *
      * @param file the file to send
      */
     private void sendTextFileToServer(File file) {
         final String idToken = this.mIdToken;
-        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
+        //Uncomment the following line if you want to send the data to the proprietary server
+        //MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
+        //Uncomment the following line if you want to send the data to the heroku server
+        MultipartFileRequest multipartFileRequest = new MultipartFileRequest(WebServerConstants.HEROKU_WEB_SERVER_UPLOAD_MEASURE_FILE_URL, file, getApplicationContext()
                 , new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
@@ -595,6 +609,7 @@ public class MainActivity extends Activity {
 
     /**
      * Returns the sensors weared over the patient's body.
+     *
      * @return the Map with the arrangement key/values.
      */
     private void readArrangementFile() {
@@ -603,20 +618,19 @@ public class MainActivity extends Activity {
         BufferedReader bufferedReader;
         String[] keyValue;
         String receiveString;
-        mArrange = new HashMap<String,String>();
+        mArrange = new HashMap<String, String>();
         try {
             inputStream = openFileInput(MobileWearConstants.ARRANGEMENT_FILENAME);
-            if ( inputStream != null ) {
+            if (inputStream != null) {
                 inputStreamReader = new InputStreamReader(inputStream);
                 bufferedReader = new BufferedReader(inputStreamReader);
-                while ((receiveString = bufferedReader.readLine()) != null ) {
+                while ((receiveString = bufferedReader.readLine()) != null) {
                     keyValue = receiveString.split(";");
                     mArrange.put(keyValue[0], keyValue[1]);
                 }
                 inputStream.close();
             }
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             mArrange = null;
         } catch (IOException e) {
             mArrange = null;

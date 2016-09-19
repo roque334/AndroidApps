@@ -10,8 +10,8 @@ import java.util.Arrays;
  */
 public class DSPFilter {
 
-    final private static float[] aLow = new float[]{1.76004f,1.18289f,0.27806f};
-    final private static float[] bLow = new float[]{0.52762f,1.58287f,1.58287f,0.52762f};
+    final private static float[] aLow = new float[]{1.76004f, 1.18289f, 0.27806f};
+    final private static float[] bLow = new float[]{0.52762f, 1.58287f, 1.58287f, 0.52762f};
 
     final private static float[] aHigh = {-2.92461f, 2.85203f, -0.92737f};
     final private static float[] bHigh = {0.96300f, -2.88900f, 2.88900f, -0.96300f};
@@ -32,9 +32,10 @@ public class DSPFilter {
 
     /**
      * Initializes the windows to do the filtering process.
-     * @param x the value of the X axis.
-     * @param y the value of the Y axis.
-     * @param z the value of the Z axis.
+     *
+     * @param x    the value of the X axis.
+     * @param y    the value of the Y axis.
+     * @param z    the value of the Z axis.
      * @param type indicates the sensor.
      */
     public static void initFilter(float x, float y, float z, int type) {
@@ -115,9 +116,10 @@ public class DSPFilter {
 
     /**
      * Smooths and Filters the sensor values.
-     * @param x the value of the X axis.
-     * @param y the value of the Y axis.
-     * @param z the value of the Z axis.
+     *
+     * @param x    the value of the X axis.
+     * @param y    the value of the Y axis.
+     * @param z    the value of the Z axis.
      * @param type indicates the sensor.
      * @return the filtered values of the sensor.
      */
@@ -186,7 +188,8 @@ public class DSPFilter {
 
     /**
      * Advances int the windows of the Low-Pass Butter Filter.
-     * @param type the type of sensor.
+     *
+     * @param type    the type of sensor.
      * @param isInput the windows type.
      */
     private static void advanceInLowButterWindow(int type, boolean isInput) {
@@ -238,11 +241,12 @@ public class DSPFilter {
 
     /**
      * Applies a a pre-build low-pass butter worth filter over a values with fc = 20Hz.
+     *
      * @param type indicates the sensor.
      * @return the value filtered.
      */
-    private static float[] thirdOrderButterWorthLowPassTimeInvariantFilter(int type){
-        float [] aux1,aux2, result;
+    private static float[] thirdOrderButterWorthLowPassTimeInvariantFilter(int type) {
+        float[] aux1, aux2, result;
         aux1 = new float[3];
         aux2 = new float[3];
         result = new float[3];
@@ -294,6 +298,7 @@ public class DSPFilter {
 
     /**
      * Advances in the windows of the High-Pass Butter Filter.
+     *
      * @param isInput the windows type.
      */
     private static void advanceInHighButterWindow(boolean isInput) {
@@ -314,6 +319,7 @@ public class DSPFilter {
 
     /**
      * Applies a a pre-build high-pass butter worth filter over a values with fc = 0.3Hz.
+     *
      * @return the value filtered.
      */
     private static float[] thirdOrderButterWorthHighPassTimeInvariantFilter() {
@@ -342,13 +348,14 @@ public class DSPFilter {
 
     /**
      * Applies a third order media filter with a window of size three.
+     *
      * @param window the window.
      * @return the value filtered.
      */
-    private static float thirdOrderMedianFilter(float[] window){
+    private static float thirdOrderMedianFilter(float[] window) {
         float[] auxWindow = new float[window.length];
         float result;
-        for(int i=0;i<auxWindow.length;i++) {
+        for (int i = 0; i < auxWindow.length; i++) {
             auxWindow[i] = window[i];
         }
         Arrays.sort(auxWindow);

@@ -48,6 +48,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     /**
      * Goes through all the preferences widgets in the preferences layout.
+     *
      * @param p the Preference widget.
      */
     private void pickPreferenceObject(Preference p) {
@@ -63,6 +64,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     /**
      * Updates all the checkboxes widget with their default or current value.
+     *
      * @param p the Preference widget.
      */
     private void updateSummary(Preference p) {
@@ -72,12 +74,12 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (p instanceof NumberPickerPreference) {
             NumberPickerPreference editTextPref = (NumberPickerPreference) p;
             if (editTextPref.getKey().equalsIgnoreCase(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL)) {
-                intervalValue = sharedPref.getInt(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL,res.getInteger(R.integer.measurement_sample_defaultValue));
+                intervalValue = sharedPref.getInt(MobileWearConstants.KEY_MEASUREMENTS_SAMPLE_INTERVAL, res.getInteger(R.integer.measurement_sample_defaultValue));
                 text = String.format(res.getString(R.string.measurement_sample_summary), intervalValue);
-            }else{
-                if(editTextPref.getKey().equalsIgnoreCase(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
+            } else {
+                if (editTextPref.getKey().equalsIgnoreCase(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL)) {
                     intervalValue = sharedPref.getInt(MobileWearConstants.KEY_HANDHELD_WEAR_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
-                }else{
+                } else {
                     intervalValue = sharedPref.getInt(MobileWearConstants.KEY_HANDHELD_SERVER_SYNC_INTERVAL, res.getInteger(R.integer.sync_interval_defaultValue));
                 }
                 text = String.format(res.getString(R.string.sync_interval_summary), intervalValue);
@@ -91,5 +93,4 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         Preference pref = findPreference(key);
         updateSummary(pref);
     }
-
 }

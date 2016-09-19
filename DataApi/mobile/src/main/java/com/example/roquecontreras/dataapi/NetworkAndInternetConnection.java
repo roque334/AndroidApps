@@ -27,6 +27,11 @@ public class NetworkAndInternetConnection {
 
     private static ProgressDialog mProgressDialog;
 
+    /**
+     * Checks whether the device is connected to Internet or not.
+     *
+     * @param context the application context.
+     */
     public static void checkNetworkAndInternet(Context context) {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(context);
@@ -44,6 +49,11 @@ public class NetworkAndInternetConnection {
         }
     }
 
+    /**
+     * Resets the application if the device is disconnected of Internet for a period of time.
+     *
+     * @param context the application context.
+     */
     private static void resetAppAfterSomeTime(final Context context) {
         new Thread(new Runnable() {
             @Override
@@ -64,6 +74,13 @@ public class NetworkAndInternetConnection {
         }).start();
     }
 
+    /**
+     * Checks whether the device is connected to internet through a Mobile or WiFi network.
+     *
+     * @param context the application context.
+     * @return true if the device is connected to internet through a Mobile or WiFi network.
+     * false if the device is not connected to internet through a Mobile or WiFi network.
+     */
     private static boolean isMobileWiFiNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager;
         NetworkInfo activeNetworkInfo;
@@ -85,6 +102,13 @@ public class NetworkAndInternetConnection {
         return result;
     }
 
+    /**
+     * Checks whether the device is connected to Internet or not through a ping to google.
+     *
+     * @param timeOut amount of milliseconds to obtain a respond from the ping to google.
+     * @return true if the ping was performed successfully;
+     * false if the ping was a fail.
+     */
     private static boolean isInternetConnectionAvailable(int timeOut) {
         InetAddress inetAddress = null;
         try {
